@@ -68,24 +68,40 @@
                     <span>Back to List</span>
                 </a>
 
-                <div class="task-detail-header">
-                    <h2 class="task-detail-title" id="detailTitle">Compile</h2>
-                    <div class="task-detail-meta" id="detailMeta"></div>
+                <div class="task-detail-header"
+                    style="display:flex; justify-content:space-between; align-items:flex-start; gap:12px; flex-wrap:wrap;">
+                    <div>
+                        <h2 class="task-detail-title" id="detailTitle">Compile</h2>
+                        <div class="task-detail-meta" id="detailMeta"></div>
+                    </div>
+                    <div style="display:flex; gap:8px; flex-wrap:wrap;">
+                        <button id="btnDeleteCurrent" class="btn btn-danger btn-sm">
+                            <span>🗑️</span>
+                            <span>Delete</span>
+                        </button>
+                    </div>
                 </div>
+
 
                 <div class="task-result">
                     <div class="panel-header output-tabs">
                         <div class="tabs">
-                            <button class="tab active" data-tab="detail-json">JSON</button>
+                            <button class="tab active" data-tab="detail-protocol">Protocol</button>
+                            <button class="tab" data-tab="detail-json">JSON</button>
+                            <button class="tab" data-tab="detail-compare">Compare</button>
                             <button class="tab" data-tab="detail-evidence">Evidence</button>
                             <button class="tab" data-tab="detail-runbook">Runbook</button>
+                            <button class="tab" data-tab="detail-schemes">Schemes</button>
                         </div>
                     </div>
 
-                    <div class="panel-body">
-                        <div class="tab-content active" id="tab-detail-json"></div>
+                    <div class="panel-body output-content">
+                        <div class="tab-content active" id="tab-detail-protocol"></div>
+                        <div class="tab-content" id="tab-detail-json"></div>
+                        <div class="tab-content" id="tab-detail-compare"></div>
                         <div class="tab-content" id="tab-detail-evidence"></div>
                         <div class="tab-content" id="tab-detail-runbook"></div>
+                        <div class="tab-content" id="tab-detail-schemes"></div>
                     </div>
                 </div>
             </div>
@@ -121,6 +137,11 @@
                         }
                     });
                 });
+
+                const btnDeleteCurrent = document.getElementById('btnDeleteCurrent');
+                if (btnDeleteCurrent) {
+                    btnDeleteCurrent.addEventListener('click', () => this.deleteCurrent());
+                }
             },
 
             async load() {
@@ -146,24 +167,31 @@
 
                 if (!items.length) {
                     el.innerHTML = `
-            <div class="empty-state">
-              <div class="empty-state-icon">📋</div>
-              <div class="empty-state-title">No history yet</div>
-              <div class="empty-state-text">Generate your first chip design to see it here</div>
-            </div>`;
+                    <div class="empty-state">
+                      <div class="empty-state-icon">📋</div>
+                      <div class="empty-state-title">No history yet</div>
+                      <div class="empty-state-text">Generate your first chip design to see it here</div>
+                    </div>`;
                     return;
                 }
 
                 el.innerHTML = items.map(it => `
-          <div class="task-card" onclick="HistoryApp.open('${it.compile_id}')">
-            <div class="task-name">${Utils.escapeHtml(it.protocol_preview || it.compile_id)}</div>
-            <div class="task-meta">
-              <div class="task-meta-item"><span>📅</span><span>${Utils.formatDate(it.created_at)}</span></div>
-              <div class="task-meta-item"><span>⏱️</span><span>${Utils.formatDuration(it.duration_ms)}</span></div>
-              <div class="task-meta-item">${this.badge(it.status)}</div>
-            </div>
-          </div>
-        `).join('');
+                <div class="task-card" style="display:flex; justify-content:space-between; align-items:flex-start; gap:12px;">
+                    <div style="flex:1; min-width:0; cursor:pointer;" onclick="HistoryApp.open('${it.compile_id}')">
+                        <div class="task-name">${Utils.escapeHtml(it.protocol_preview || it.compile_id)}</div>
+                        <div class="task-meta">
+                          <div class="task-meta-item"><span>📅</span><span>${Utils.formatDate(it.created_at)}</span></div>
+                          <div class="task-meta-item"><span>⏱️</span><span>${Utils.formatDuration(it.duration_ms)}</span></div>
+                          <div class="task-meta-item">${this.badge(it.status)}</div>
+                        </div>
+                    </div>
+                    <div style="display:flex; align-items:center; gap:8px; flex-shrink:0;">
+                        <button class="btn btn-danger btn-sm" onclick="event.stopPropagation(); HistoryApp.deleteItem('${it.compile_id}')">
+                            🗑️ Delete
+                        </button>
+                    </div>
+                </div>
+            `).join('');
             },
 
             badge(status) {
@@ -185,15 +213,18 @@
 
                     document.getElementById('detailTitle').textContent = compileId;
                     document.getElementById('detailMeta').innerHTML = `
-            <div class="task-meta-item"><span>📅</span><span>${Utils.formatDate(data.created_at || data.trace?.[0]?.ts || new Date())}</span></div>
-            <div class="task-meta-item"><span>📚</span><span>RAG docs: ${data.stats?.doc_count ?? '-'}</span></div>
-            <div class="task-meta-item"><span>⏱️</span><span>Total: ${Utils.formatDuration(data.stats?.duration_ms ?? 0)}</span></div>
-          `;
+                    <div class="task-meta-item"><span>📅</span><span>${Utils.formatDate(data.created_at || new Date())}</span></div>
+                    <div class="task-meta-item"><span>📚</span><span>RAG docs: ${data.stats?.doc_count ?? '-'}</span></div>
+                    <div class="task-meta-item"><span>⏱️</span><span>Total: ${Utils.formatDuration(data.stats?.duration_ms ?? 0)}</span></div>
+                `;
 
-                    this.renderDetailJSON(data.final);
+                    this.renderDetailProtocol(data.protocol_text || '');
+                    this.renderDetailJSONPair(data.draft || {}, data.final || {});
+                    this.renderDetailCompare(data);
                     this.renderDetailEvidence(data.evidence || []);
-                    this.renderDetailRunbook(data.final?.plan || []);
-                    this.switchDetailTab('detail-json');
+                    this.renderDetailRunbookPair(data.draft?.plan || [], data.final?.plan || []);
+                    this.renderDetailSchemes(data);
+                    this.switchDetailTab('detail-protocol');
                 } catch (e) {
                     console.error(e);
                     Utils.showToast('Failed to load detail', 'error');
@@ -206,6 +237,7 @@
                         tab.classList.toggle('active', tab.dataset.tab === name);
                     }
                 });
+
                 document.querySelectorAll('.tab-content').forEach(content => {
                     if (content.id && content.id.startsWith('tab-detail-')) {
                         content.classList.toggle('active', content.id === `tab-${name}`);
@@ -213,89 +245,321 @@
                 });
             },
 
-            renderDetailJSON(finalJson) {
-                const container = document.getElementById('tab-detail-json');
-                if (!container) return;
-                const sections = ['instances', 'connections', 'plan'];
-                container.innerHTML = sections.map(section => `
-          <div class="collapsible open">
-            <div class="collapsible-header" onclick="this.parentElement.classList.toggle('open')">
-              <div class="collapsible-title">
-                <span>${section === 'instances' ? '🧩' : section === 'connections' ? '🔗' : '📋'}</span>
-                <span>${section}</span>
-                <span class="badge badge-primary">${(finalJson?.[section] || []).length} items</span>
-              </div>
-              <span class="collapsible-icon">▼</span>
-            </div>
-            <div class="collapsible-content">
-              <div class="code-block">
-                <pre class="code-content">${Utils.highlightJSON(finalJson?.[section] || [])}</pre>
-              </div>
-            </div>
-          </div>
-        `).join('');
+            async deleteItem(compileId) {
+                const ok = window.confirm(`Delete history record ${compileId} ?`);
+                if (!ok) return;
+
+                try {
+                    await API.deleteHistory(compileId);
+                    Utils.showToast('History deleted ✅', 'success');
+
+                    if (this.current?.compile_id === compileId) {
+                        this.showTaskList();
+                    }
+
+                    await this.load();
+                } catch (e) {
+                    console.error(e);
+                    Utils.showToast(`Delete failed: ${e.message}`, 'error');
+                }
             },
 
-            renderDetailEvidence(evidence) {
-                const container = document.getElementById('tab-detail-evidence');
-                if (!container) return;
-                if (!evidence.length) {
-                    container.innerHTML = `
-            <div class="empty-state">
-              <div class="empty-state-icon">📚</div>
-              <div class="empty-state-title">No evidence</div>
-            </div>`;
+            async deleteCurrent() {
+                if (!this.current?.compile_id) {
+                    Utils.showToast('No current record', 'warning');
                     return;
                 }
-                container.innerHTML = evidence.map(ev => `
-          <div class="evidence-card">
-            <div class="evidence-header">
-              <div class="evidence-source"><span>📄</span><span>${Utils.escapeHtml(ev.source || 'ref')}</span></div>
-              <div class="evidence-score">Score: ${((ev.score || 1) * 100).toFixed(0)}%</div>
-            </div>
-            <div class="evidence-snippet">${Utils.escapeHtml(ev.snippet || '')}</div>
-            <div class="evidence-location">📍 ${Utils.escapeHtml(ev.location || '')}</div>
-          </div>
-        `).join('');
-            },
-
-            renderDetailRunbook(plan) {
-                const container = document.getElementById('tab-detail-runbook');
-                if (!container) return;
-                if (!plan.length) {
-                    container.innerHTML = `
-            <div class="empty-state">
-              <div class="empty-state-icon">📋</div>
-              <div class="empty-state-title">No plan</div>
-            </div>`;
-                    return;
-                }
-                container.innerHTML = `
-          <div class="timeline">
-            ${plan.map(step => `
-              <div class="timeline-item">
-                <div class="timeline-dot"></div>
-                <div class="timeline-content">
-                  <div class="timeline-step">Step ${step.step_id ?? '-'}</div>
-                  <div class="timeline-action">${Utils.escapeHtml(step.action || '')}</div>
-                  <div class="timeline-duration">⏱️ Duration: ${step.duration_s ?? 0}s</div>
-                </div>
-              </div>
-            `).join('')}
-          </div>
-        `;
+                await this.deleteItem(this.current.compile_id);
             },
 
             showTaskList() {
                 document.getElementById('taskListView').classList.remove('hidden');
                 document.getElementById('taskDetailView').classList.add('hidden');
                 this.current = null;
+            },
+
+            renderDetailJSONPair(draftJson, finalJson) {
+                const container = document.getElementById('tab-detail-json');
+                if (!container) return;
+
+                const sections = ['reasoning', 'instances', 'connections', 'plan'];
+
+                const renderSectionBlock = (section, data) => {
+                    const icon = section === 'reasoning' ? '🧠'
+                        : section === 'instances' ? '🧩'
+                            : section === 'connections' ? '🔗'
+                                : '📋';
+
+                    const value = data?.[section];
+                    const count = Array.isArray(value) ? value.length : (value ? 1 : 0);
+                    const contentObj = section === 'reasoning' ? (value || '') : (value || []);
+
+                    return `
+                    <div class="collapsible open">
+                        <div class="collapsible-header" onclick="this.parentElement.classList.toggle('open')">
+                            <div class="collapsible-title">
+                                <span>${icon}</span>
+                                <span>${section}</span>
+                                <span class="badge badge-primary">${count} items</span>
+                            </div>
+                            <span class="collapsible-icon">▼</span>
+                        </div>
+                        <div class="collapsible-content">
+                            <div class="code-block">
+                                <pre class="code-content">${Utils.highlightJSON(contentObj)}</pre>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                };
+
+                const renderSide = (title, icon, data) => `
+                <div style="flex:1; min-width:320px;">
+                    <div style="font-weight:600; display:flex; gap:8px; align-items:center; margin-bottom:10px;">
+                        <span>${icon}</span><span>${title}</span>
+                    </div>
+                    ${sections.map(section => renderSectionBlock(section, data)).join('')}
+                </div>
+            `;
+
+                container.innerHTML = `
+                <div style="display:flex; gap:14px; flex-wrap:wrap;">
+                    ${renderSide('Draft', '🧪', draftJson)}
+                    ${renderSide('Final', '✅', finalJson)}
+                </div>
+            `;
+            },
+
+            renderDetailCompare(result) {
+                const container = document.getElementById('tab-detail-compare');
+                if (!container) return;
+
+                const stats = result.stats || {};
+                const diff = result.diff || {};
+                const draft = result.draft || {};
+                const final = result.final || {};
+
+                const instDiff = (stats.final_instances ?? 0) - (stats.draft_instances ?? 0);
+                const connDiff = (stats.final_connections ?? 0) - (stats.draft_connections ?? 0);
+
+                const listBlock = (title, arr) => `
+                <div style="margin-top:10px;">
+                    <div style="font-weight:600; margin-bottom:6px;">${title} <span class="badge badge-primary">${(arr || []).length}</span></div>
+                    <div class="code-block"><pre class="code-content">${Utils.highlightJSON(arr || [])}</pre></div>
+                </div>
+            `;
+
+                container.innerHTML = `
+                <div style="display:flex; flex-direction:column; gap:14px;">
+                    <div class="panel" style="border:1px solid var(--border-color); border-radius: var(--radius-lg);">
+                        <div class="panel-header">
+                            <div class="panel-title"><span>📊</span><span>Review Report (Draft vs Final)</span></div>
+                        </div>
+                        <div class="panel-body">
+                            <div style="display:grid; grid-template-columns: 1fr 1fr; gap:12px;">
+                                <div>
+                                    <div style="font-weight:700; margin-bottom:6px;">🧪 Draft Reasoning</div>
+                                    <div class="code-block"><pre class="code-content">${Utils.highlightJSON(draft.reasoning || '')}</pre></div>
+                                </div>
+                                <div>
+                                    <div style="font-weight:700; margin-bottom:6px;">✅ Final Reasoning</div>
+                                    <div class="code-block"><pre class="code-content">${Utils.highlightJSON(final.reasoning || '')}</pre></div>
+                                </div>
+                            </div>
+
+                            <div style="margin-top:14px;">
+                                <div style="font-weight:700; margin-bottom:6px;">📈 Change Summary</div>
+                                <div style="display:flex; gap:10px; flex-wrap:wrap;">
+                                    <span class="badge badge-primary">Instances: ${stats.draft_instances ?? 0} → ${stats.final_instances ?? 0} (${instDiff >= 0 ? '+' : ''}${instDiff})</span>
+                                    <span class="badge badge-primary">Connections: ${stats.draft_connections ?? 0} → ${stats.final_connections ?? 0} (${connDiff >= 0 ? '+' : ''}${connDiff})</span>
+                                    <span class="badge badge-primary">RAG Docs: ${stats.doc_count ?? '-'}</span>
+                                    <span class="badge badge-primary">Gen: ${(stats.gen_time ?? 0).toFixed(2)}s</span>
+                                    <span class="badge badge-primary">Ver: ${(stats.ver_time ?? 0).toFixed(2)}s</span>
+                                    <span class="badge badge-primary">Total: ${Utils.formatDuration(stats.duration_ms ?? 0)}</span>
+                                </div>
+                            </div>
+
+                            <div style="margin-top:14px;">
+                                <div style="font-weight:700; margin-bottom:6px;">🧾 Added / Removed IDs</div>
+                                ${listBlock('🧩 Instances Added', diff.instances_added)}
+                                ${listBlock('🧩 Instances Removed', diff.instances_removed)}
+                                ${listBlock('🔗 Connections Added', diff.connections_added)}
+                                ${listBlock('🔗 Connections Removed', diff.connections_removed)}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            },
+
+            renderDetailEvidence(evidence) {
+                const container = document.getElementById('tab-detail-evidence');
+                if (!container) return;
+
+                if (!evidence.length) {
+                    container.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-state-icon">📚</div>
+                        <div class="empty-state-title">No evidence</div>
+                    </div>`;
+                    return;
+                }
+
+                container.innerHTML = evidence.map(ev => `
+                <div class="evidence-card">
+                    <div class="evidence-header">
+                        <div class="evidence-source">
+                            <span>📄</span>
+                            <span>${Utils.escapeHtml(ev.source || 'ref')}</span>
+                        </div>
+                        <div class="evidence-score">Score: ${((ev.score || 1) * 100).toFixed(0)}%</div>
+                    </div>
+                    <div class="evidence-snippet">${Utils.escapeHtml(ev.snippet || '')}</div>
+                    <div class="evidence-location">📍 ${Utils.escapeHtml(ev.location || '')}</div>
+                </div>
+            `).join('');
+            },
+
+            renderDetailRunbookPair(draftPlan, finalPlan) {
+                const container = document.getElementById('tab-detail-runbook');
+                if (!container) return;
+
+                const renderTimeline = (title, icon, plan) => {
+                    if (!plan || !plan.length) {
+                        return `
+                        <div style="flex:1; min-width:320px;">
+                            <div style="font-weight:700; margin-bottom:8px;">${icon} ${title}</div>
+                            <div class="empty-state">
+                                <div class="empty-state-icon">📋</div>
+                                <div class="empty-state-title">No plan</div>
+                            </div>
+                        </div>`;
+                    }
+
+                    return `
+                    <div style="flex:1; min-width:320px;">
+                        <div style="font-weight:700; margin-bottom:8px;">${icon} ${title}</div>
+                        <div class="timeline">
+                            ${plan.map(step => `
+                                <div class="timeline-item">
+                                    <div class="timeline-dot"></div>
+                                    <div class="timeline-content">
+                                        <div class="timeline-step">Step ${step.step_id ?? '-'}</div>
+                                        <div class="timeline-action">${Utils.escapeHtml(step.action || '')}</div>
+                                        <div class="timeline-duration">⏱️ Duration: ${step.duration_s ?? 0}s</div>
+                                    </div>
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>`;
+                };
+
+                container.innerHTML = `
+                <div style="display:flex; gap:14px; flex-wrap:wrap;">
+                    ${renderTimeline('Draft Runbook', '🧪', draftPlan)}
+                    ${renderTimeline('Final Runbook', '✅', finalPlan)}
+                </div>
+            `;
+            },
+
+            renderDetailProtocol(protocolText) {
+                const container = document.getElementById('tab-detail-protocol');
+                if (!container) return;
+
+                if (!protocolText || !protocolText.trim()) {
+                    container.innerHTML = `
+            <div class="empty-state">
+                <div class="empty-state-icon">📝</div>
+                <div class="empty-state-title">No protocol text</div>
+                <div class="empty-state-text">This history record does not contain the original protocol</div>
+            </div>
+        `;
+                    return;
+                }
+
+                container.innerHTML = `
+        <div style="display:flex; flex-direction:column; gap:12px;">
+            <div style="display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap;">
+                <div style="font-weight:700; display:flex; gap:8px; align-items:center;">
+                    <span>📝</span><span>Original Protocol</span>
+                </div>
+                <button class="btn btn-ghost btn-sm" onclick="HistoryApp.copyProtocol()">
+                    📋 Copy
+                </button>
+            </div>
+
+            <div class="panel" style="border:1px solid var(--border-color); border-radius: var(--radius-lg);">
+                <div class="panel-body" style="padding:0;">
+                    <div class="code-block" style="margin:0; border:none; border-radius:inherit;">
+                        <pre class="code-content" style="white-space:pre-wrap; word-break:break-word;">${Utils.escapeHtml(protocolText)}</pre>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+            },
+
+            async copyProtocol() {
+                const text = this.current?.protocol_text || '';
+                if (!text) {
+                    Utils.showToast('No protocol to copy', 'warning');
+                    return;
+                }
+
+                const ok = await Utils.copyToClipboard(text);
+                Utils.showToast(ok ? 'Protocol copied ✅' : 'Copy failed', ok ? 'success' : 'error');
+            },
+
+
+            renderDetailSchemes(data) {
+                const container = document.getElementById('tab-detail-schemes');
+                if (!container) return;
+
+                const compileId = data.compile_id;
+                const imgUrl = `/api/v1/compile/${encodeURIComponent(compileId)}/layout.png`;
+
+                const drawInfo = data.artifacts?.draw || {};
+                const drawOk = drawInfo.ok !== false;
+
+                if (!drawOk && !data.artifacts?.files?.scheme) {
+                    container.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-state-icon">❌</div>
+                        <div class="empty-state-title">No schemes available</div>
+                        <div class="empty-state-text">${Utils.escapeHtml(drawInfo.error || 'Draw failed')}</div>
+                    </div>
+                `;
+                    return;
+                }
+
+                container.innerHTML = `
+                <div style="display:flex; flex-direction:column; gap:12px;">
+                    <div style="display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap;">
+                        <div style="font-weight:700; display:flex; gap:8px; align-items:center;">
+                            <span>🖼️</span><span>Schemes</span>
+                        </div>
+                        <div style="display:flex; gap:8px; flex-wrap:wrap;">
+                            <a class="btn btn-primary btn-sm" href="${imgUrl}" download="microfluidic_layout.png">⬇️ Download PNG</a>
+                            <a class="btn btn-ghost btn-sm" href="${imgUrl}" target="_blank">🔍 Open</a>
+                        </div>
+                    </div>
+
+                    <div class="panel" style="border:1px solid var(--border-color); border-radius: var(--radius-lg);">
+                        <div class="panel-body" style="padding:12px;">
+                            <img src="${imgUrl}"
+                                 alt="microfluidic schemes"
+                                 style="width:100%; height:auto; display:block; border-radius:10px; border:1px solid var(--border-color);" />
+                        </div>
+                    </div>
+                </div>
+            `;
             }
         };
 
         document.addEventListener('DOMContentLoaded', () => HistoryApp.init());
         window.HistoryApp = HistoryApp;
     </script>
+
 </body>
 
 </html>

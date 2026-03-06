@@ -74,6 +74,12 @@ const API = {
         return this.request(`/api/v1/history/${compileId}`);
     },
 
+    async deleteHistory(compileId) {
+        return this.request(`/api/v1/history/${compileId}`, {
+            method: 'DELETE'
+        });
+    },
+
     async drawSchemes(finalJson) {
         const url = `${this.baseUrl}/api/v1/draw`;
         const res = await fetch(url, {

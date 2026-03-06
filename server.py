@@ -4,6 +4,7 @@ import json
 import time
 import uuid
 import threading
+import shutil
 from pathlib import Path
 from typing import Any, Dict, Optional, List
 from datetime import datetime, timezone
@@ -139,6 +140,137 @@ def persist_compile_artifacts(
             "error": draw_error,
         }
     }
+
+def safe_read_json(path: Path) -> dict:
+    if not path.exists():
+        return {}
+    try:
+        return json.loads(path.read_text(encoding="utf-8"))
+    except Exception:
+        return {}
+
+
+def safe_read_text(path: Path) -> str:
+    if not path.exists():
+        return ""
+    try:
+        return path.read_text(encoding="utf-8")
+    except Exception:
+        return ""
+
+
+def find_history_runs() -> List[dict]:
+    """
+    扫描 ./history 下所有有效历史目录，按 created_at 倒序返回 meta 列表
+    """
+    runs = []
+    if not HISTORY_DIR.exists():
+        return runs
+
+    for run_dir in HISTORY_DIR.iterdir():
+        if not run_dir.is_dir():
+            continue
+        if run_dir.name.startswith("_tmp_draw"):
+            continue
+
+        meta_path = run_dir / "meta.json"
+        if not meta_path.exists():
+            continue
+
+        meta = safe_read_json(meta_path)
+        if not meta:
+            continue
+
+        meta["_run_dir"] = str(run_dir)
+        runs.append(meta)
+
+    runs.sort(key=lambda x: x.get("created_at", ""), reverse=True)
+    return runs
+
+
+def find_history_run_by_compile_id(compile_id: str) -> Optional[dict]:
+    for meta in find_history_runs():
+        if meta.get("compile_id") == compile_id:
+            return meta
+    return None
+
+
+def load_history_result(compile_id: str) -> Optional[dict]:
+    meta = find_history_run_by_compile_id(compile_id)
+    if not meta:
+        return None
+
+    run_dir = Path(meta.get("_run_dir", ""))
+    if not run_dir.exists():
+        return None
+
+    draft = safe_read_json(run_dir / "draft.json")
+    final = safe_read_json(run_dir / "final.json")
+    protocol_text = safe_read_text(run_dir / "protocol.txt")
+
+    result = {
+        "compile_id": meta.get("compile_id", compile_id),
+        "protocol_text": protocol_text,
+        "draft": draft,
+        "final": final,
+        "stats": meta.get("stats", {}),
+        "diff": {
+            "instances_added": sorted(
+                list(
+                    {x.get("inst_id") for x in final.get("instances", [])}
+                    - {x.get("inst_id") for x in draft.get("instances", [])}
+                )
+            ),
+            "instances_removed": sorted(
+                list(
+                    {x.get("inst_id") for x in draft.get("instances", [])}
+                    - {x.get("inst_id") for x in final.get("instances", [])}
+                )
+            ),
+            "connections_added": sorted(
+                list(
+                    {x.get("edge_id") for x in final.get("connections", [])}
+                    - {x.get("edge_id") for x in draft.get("connections", [])}
+                )
+            ),
+            "connections_removed": sorted(
+                list(
+                    {x.get("edge_id") for x in draft.get("connections", [])}
+                    - {x.get("edge_id") for x in final.get("connections", [])}
+                )
+            ),
+            "draft_reasoning_preview": (draft.get("reasoning", "") or "")[:200],
+            "final_reasoning_preview": (final.get("reasoning", "") or "")[:200],
+        },
+        "evidence": meta.get("evidence", []),
+        "trace": meta.get("trace", []),
+        "artifacts": {
+            "history_dir": str(run_dir),
+            "folder_name": meta.get("folder_name", run_dir.name),
+            "files": meta.get("paths", {}),
+            "draw": meta.get("draw", {}),
+        },
+        "created_at": meta.get("created_at"),
+        "status": "succeeded",
+    }
+    return result
+
+
+def delete_history_run(compile_id: str) -> bool:
+    meta = find_history_run_by_compile_id(compile_id)
+    if not meta:
+        return False
+
+    run_dir = Path(meta.get("_run_dir", ""))
+    if not run_dir.exists():
+        return False
+
+    shutil.rmtree(run_dir)
+
+    with STORE_LOCK:
+        COMPILES.pop(compile_id, None)
+
+    return True
 
 
 # -----------------------------
@@ -492,25 +624,37 @@ def get_compile_result(compile_id: str):
 
 @app.get("/api/v1/history", response_model=HistoryListResponse)
 def list_history():
-    with STORE_LOCK:
-        items: List[HistoryItem] = []
-        for compile_id, data in sorted(COMPILES.items(), key=lambda kv: kv[1].get("created_at", ""), reverse=True):
-            protocol = data.get("protocol_text", "")
-            preview = protocol.strip().replace("\n", " ")[:80]
-            items.append(HistoryItem(
-                compile_id=compile_id,
-                created_at=data.get("created_at", ""),
-                status=data.get("status", "succeeded"),
-                protocol_preview=preview,
-                duration_ms=int(data.get("stats", {}).get("duration_ms", 0)),
-            ))
-        return {"items": items}
+    items: List[HistoryItem] = []
 
+    for meta in find_history_runs():
+        compile_id = meta.get("compile_id", "")
+        run_dir = Path(meta.get("_run_dir", ""))
+        protocol_text = safe_read_text(run_dir / "protocol.txt")
+        preview = protocol_text.strip().replace("\n", " ")[:80]
+
+        items.append(HistoryItem(
+            compile_id=compile_id,
+            created_at=meta.get("created_at", ""),
+            status="succeeded",
+            protocol_preview=preview,
+            duration_ms=int(meta.get("stats", {}).get("duration_ms", 0)),
+        ))
+
+    return {"items": items}
 
 @app.get("/api/v1/history/{compile_id}", response_model=CompileResultResponse)
 def history_detail(compile_id: str):
-    return get_compile_result(compile_id)
+    data = load_history_result(compile_id)
+    if not data:
+        raise HTTPException(status_code=404, detail="History result not found")
+    return data
 
+@app.delete("/api/v1/history/{compile_id}")
+def delete_history(compile_id: str):
+    ok = delete_history_run(compile_id)
+    if not ok:
+        raise HTTPException(status_code=404, detail="History result not found")
+    return {"compile_id": compile_id, "status": "deleted"}
 
 @app.post("/api/v1/draw")
 def draw_layout(req: DrawRequest):
@@ -537,26 +681,28 @@ def draw_layout(req: DrawRequest):
 @app.get("/api/v1/compile/{compile_id}/layout.png")
 def draw_layout_from_compile(compile_id: str):
     """
-    优先返回历史目录里已保存的 scheme.png
-    如果不存在，则尝试基于 final JSON 即时生成一张临时图
+    优先返回 history 目录中的 scheme.png
+    若不存在，则尝试用 final.json 即时生成
     """
-    with STORE_LOCK:
-        data = COMPILES.get(compile_id)
-        if not data:
-            raise HTTPException(status_code=404, detail="Compile result not found")
+    history_meta = find_history_run_by_compile_id(compile_id)
+    if not history_meta:
+        raise HTTPException(status_code=404, detail="Compile result not found")
 
-    artifacts = data.get("artifacts") or {}
-    files = artifacts.get("files") or {}
-    scheme_path = files.get("scheme")
+    run_dir = Path(history_meta.get("_run_dir", ""))
+    scheme_path = run_dir / "scheme.png"
+    final_path = run_dir / "final.json"
 
-    if scheme_path and os.path.exists(scheme_path):
+    if scheme_path.exists():
         return FileResponse(
-            scheme_path,
+            str(scheme_path),
             media_type="image/png",
             filename="microfluidic_layout.png"
         )
 
-    final_data = data.get("final", {})
+    final_data = safe_read_json(final_path)
+    if not final_data:
+        raise HTTPException(status_code=404, detail="Final JSON not found")
+
     temp_dir = HISTORY_DIR / "_tmp_draw"
     temp_dir.mkdir(parents=True, exist_ok=True)
     out_path = temp_dir / f"{compile_id}.png"
