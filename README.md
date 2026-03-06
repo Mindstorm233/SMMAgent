@@ -1,11 +1,16 @@
-# SMM Agent Project (Microfluidics Protocol → BioChip Design)
+# 🧬 SMM Agent Project
 
-This project implements a **two-stage microfluidics/biochip design agent**:
+## Microfluidics Protocol → BioChip Design → Layout Rendering
 
-* **Stage 1 (Generator):** converts an experimental protocol (natural language) into a structured chip design.
-* **Stage 2 (Verifier):** validates and minimally repairs the design to satisfy strict schema + connectivity + port rules.
+SMM Agent is a lightweight microfluidic design system that turns **natural-language experimental protocols** into **structured biochip designs**, then optionally renders them into **layout images** for visualization and review.
 
-It supports **RAG (Retrieval-Augmented Generation)** using **Chroma** as a local vector store and a static web UI served by **FastAPI**.
+It combines:
+
+* 🤖 a **two-stage LLM pipeline**
+* 📚 **RAG** with a local **Chroma** vector store
+* 🌐 a **FastAPI** backend with static web pages
+* 🖼️ optional **scheme/layout rendering**
+* 🗂️ local **history persistence** for completed runs
 
 ---
 
@@ -16,10 +21,18 @@ It supports **RAG (Retrieval-Augmented Generation)** using **Chroma** as a local
 
   * RAG retrieval → Generator → Verifier
 * ✅ Output structured design as a Pydantic model (`BioChipDesign`)
+* ✅ Render the final design into a **microfluidic layout image**
 * ✅ Web UI:
 
   * `/` shows the Generator page
-  * `/history.html` shows local history (current MVP stores in memory unless you add persistence)
+  * `/history.html` shows persisted local history
+* ✅ Persist each completed run under `./history/` with:
+
+  * original protocol text
+  * draft JSON
+  * final JSON
+  * generated scheme / layout image
+  * metadata
 
 ---
 
@@ -30,17 +43,24 @@ microchip_designer/
 ├─ server.py
 ├─ cli.py
 ├─ build_knowledge.py
+├─ requirements.txt
 ├─ core/
 │  ├─ __init__.py
 │  ├─ agent.py
 │  ├─ knowledge_builder.py
 │  ├─ rag.py
 │  └─ schema.py
+├─ draw/
+│  ├─ __init__.py
+│  ├─ components.py
+│  ├─ layout.py
+│  └─ renderer.py
 ├─ data/
 │  ├─ knowledge.md
 │  ├─ compiler_prompt.md
 │  └─ verifier_prompt.md
 ├─ chroma_db/              # created after building the knowledge base
+├─ history/                # persisted run history, created automatically
 └─ static/
    ├─ index.html
    ├─ history.html
@@ -58,6 +78,9 @@ microchip_designer/
 
   * chat completions (structured output preferred)
   * embeddings
+* The dependencies required by your rendering backend in `draw/`
+
+> The renderer may require additional graphics-related Python packages or system libraries depending on how `draw.renderer.draw_chip(...)` is implemented.
 
 ---
 
@@ -71,7 +94,8 @@ conda activate smmagent
 
 pip install -U langchain
 pip install langchain-openai langchain_community langchain-chroma
-pip install python-dotenv chromadb fastapi uvicorn
+pip install python-dotenv chromadb fastapi uvicorn tqdm
+pip install schemdraw
 ```
 
 ### Option B: venv
@@ -79,15 +103,25 @@ pip install python-dotenv chromadb fastapi uvicorn
 ```bash
 python -m venv .venv
 source .venv/bin/activate  # Windows: .venv\Scripts\activate
+
 pip install -U langchain
 pip install langchain-openai langchain_community langchain-chroma
-pip install python-dotenv chromadb fastapi uvicorn
+pip install python-dotenv chromadb fastapi uvicorn tqdm
+pip install schemdraw
 ```
 
-> If you use `tqdm` for progress bars while building the KB:
+### Option C: install directly from `requirements.txt`
 
 ```bash
-pip install tqdm
+python -m venv .venv
+source .venv/bin/activate  # Windows: .venv\Scripts\activate
+pip install -r requirements.txt
+```
+
+### Optional: install Jupyter
+
+```bash
+pip install jupyter
 ```
 
 ---
@@ -106,10 +140,14 @@ embedding_model_name=GLM-Embedding-2
 
 # optional
 temperature=0.0
+
+# optional: history root
+HISTORY_DIR=./history
 ```
 
-* `API_BASE` should point to your LLM gateway (your LLMapi).
+* `API_BASE` should point to your LLM gateway.
 * `llm_model_name` and `embedding_model_name` should match what your API supports.
+* `HISTORY_DIR` controls where completed runs are persisted.
 
 ---
 
@@ -152,6 +190,8 @@ Then open:
 * History: `http://127.0.0.1:8000/history.html`
 * Optional API tester: `http://127.0.0.1:8000/api_test.html`
 
+---
+
 ## 5) Run CLI Compilation (Optional)
 
 You can run the two-stage compiler directly via CLI:
@@ -172,14 +212,53 @@ python cli.py compile --protocol ./data/protocol.txt
 
 ---
 
-## 6) Prompts
+## 6) Rendering the Microfluidic Layout
 
-* `data/compiler_prompt.md` — Generator prompt (“protocol compiler”)
-* `data/verifier_prompt.md` — Verifier prompt (“structured validator + repair”)
+The project can render the final design JSON into a visual microfluidic layout through the `draw` package.
 
-**Tip:** If validations fail frequently, tighten:
+Typical usage:
 
-* allowed keys / exact schema keys
-* port naming requirements
-* “only declare ports you actually use”
-* force final output to be strict JSON only
+```python
+from draw.renderer import draw_chip
+
+chip_data = {}
+draw_chip(chip_data, "microfluidic_layout.png")
+```
+
+Supported output formats depend on the renderer implementation, but common examples include:
+
+* `.png`
+* `.svg`
+* `.pdf`
+
+In the web workflow, the backend can call the renderer automatically after a successful compile and persist the output image into the corresponding history directory.
+
+---
+
+## 7) API Summary
+
+Main endpoints:
+
+* `POST /api/v1/compile` — submit a compile job
+* `GET /api/v1/jobs/{job_id}` — check job status
+* `GET /api/v1/compile/{compile_id}/result` — fetch compile result
+* `POST /api/v1/draw` — render layout from JSON
+* `GET /api/v1/history` — list persisted runs
+* `GET /api/v1/history/{compile_id}` — load one historical run
+* `DELETE /api/v1/history/{compile_id}` — delete one historical run
+* `GET /api/v1/compile/{compile_id}/layout.png` — get saved or regenerated layout image
+
+---
+
+## 8) Frontend Summary
+
+### Generator Page (`/`)
+
+Provides protocol input, async generation, progress tracking, and result tabs:
+**JSON / Compare / Evidence / Runbook / Schemes**
+
+### History Page (`/history.html`)
+
+Provides searchable persisted history, detailed run review, and deletion support.
+Tabs include:
+**Protocol / JSON / Compare / Evidence / Runbook / Schemes**
