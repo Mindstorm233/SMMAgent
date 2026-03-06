@@ -1,9 +1,8 @@
 from draw.renderer import draw_chip
 
-
-# 1. 准备修正后的数据
+# 1. Prepare the revised data
 chip_data = {
-  "reasoning": "根据protocol描述，需要实现单细胞液滴包裹，包括细胞悬液、油相、裂解液的注入、混合、液滴生成和收集。由于元件库中提供的元件（M4、M5、P8）主要用于试剂合并，与液滴生成协议不完全匹配，但可以基于现有元件进行适配。使用M5作为主要混合模块，因为它设计用于通过串联微腔进行小体积合并，适合细胞悬液和裂解液的混合。使用P8作为存储模块来预装试剂。需要添加额外的入口和出口来模拟油相注入和液滴收集。由于缺乏专门的液滴生成元件（如流动聚焦结构），使用M5的混合功能来近似混合步骤，并假设液滴生成在出口处发生。操作计划包括依次注入试剂、启动载液进行混合，然后收集。",
+  "reasoning": "According to the protocol description, it is necessary to achieve single-cell droplet encapsulation, including injection, mixing, droplet generation, and collection of cell suspension, oil phase, and lysis buffer. Due to the fact that the components provided in the component library (M4, M5, P8) are mainly used for reagent merging and do not fully match the droplet generation protocol, they can be adapted based on existing components. M5 is used as the main mixing module because it is designed for small volume merging through serial microcavities, suitable for mixing cell suspensions and lysates. Use P8 as a storage module to pre install reagents. Additional inlets and outlets need to be added to simulate oil phase injection and droplet collection. Due to the lack of specialized droplet generation components (such as flow focusing structures), the mixing function of M5 is used to approximate the mixing step, assuming that droplet generation occurs at the outlet. The operation plan includes sequentially injecting reagents, starting the carrier solution for mixing, and then collecting.",
   "instances": [
     {
       "inst_id": "U001",
@@ -187,8 +186,8 @@ chip_data = {
   ]
 }
 
-# 2. 执行绘图
-# 支持 .svg, .png, .pdf 等后缀
+# 2. Execute drawing
+# Support .svg, .png, .pdf etc.
 draw_chip(chip_data, "microfluidic_layout.pdf")
 
-print("渲染完成！请检查当前目录下的 microfluidic_layout")
+print("Rendering completed! Please check the microfluidic_layout file in current directory.")

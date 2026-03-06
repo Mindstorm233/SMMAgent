@@ -659,9 +659,9 @@ def delete_history(compile_id: str):
 @app.post("/api/v1/draw")
 def draw_layout(req: DrawRequest):
     """
-    输入：chip_data JSON
-    输出：PNG 文件
-    这是即时绘图接口，不写入 history
+    Input: chip_data JSON
+    Output: PNG file
+    Draw directly without writing to history
     """
     temp_dir = HISTORY_DIR / "_tmp_draw"
     temp_dir.mkdir(parents=True, exist_ok=True)
@@ -681,8 +681,8 @@ def draw_layout(req: DrawRequest):
 @app.get("/api/v1/compile/{compile_id}/layout.png")
 def draw_layout_from_compile(compile_id: str):
     """
-    优先返回 history 目录中的 scheme.png
-    若不存在，则尝试用 final.json 即时生成
+    Return scheme.png in /history dir
+    Try use final.json to draw schemes instantly if the png file doesn't exist
     """
     history_meta = find_history_run_by_compile_id(compile_id)
     if not history_meta:
@@ -718,7 +718,7 @@ def draw_layout_from_compile(compile_id: str):
         raise HTTPException(status_code=500, detail=f"DRAW_FAILED: {e}")
 
 
-# 最后再挂载静态站点到根路径
+# Finally, mount the static site to the root path
 if os.path.isdir("./static"):
     app.mount("/", StaticFiles(directory="./static", html=True), name="static")
 

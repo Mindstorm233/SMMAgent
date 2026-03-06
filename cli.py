@@ -1,6 +1,6 @@
-"""
-命令行测试工具
-用于测试生物芯片编译器和构建知识库
+"""cli.py
+Command-line testing tool
+Used to test the biochip compiler and build the knowledge base
 """
 import os
 import json
@@ -9,54 +9,54 @@ import argparse
 from dotenv import load_dotenv
 from core import create_compiler, build_knowledge_base
 
-# 加载环境变量
+# Load environment variables
 load_dotenv()
 
 
 def print_section(title: str, char: str = "=", width: int = 60):
-    """打印分隔线"""
+    """Print a separator section"""
     print(f"\n{char * width}")
     print(title)
     print(char * width)
 
 
 def print_design_comparison(draft, final, stats):
-    """打印设计对比报告"""
-    print_section("📊 审查报告 (Review Report)", "-")
+    """Print the design comparison report"""
+    print_section("📊 Review Report", "-")
     
-    print("\n1️⃣  [Generator] 初步设计思路:")
+    print("\n1️⃣  [Generator] Initial design reasoning:")
     print(textwrap.fill(draft.reasoning, width=80))
     print("\n" + "-" * 40 + "\n")
     
-    print("2️⃣  [Verifier] 审查与修正意见:")
+    print("2️⃣  [Verifier] Review and revision comments:")
     print(textwrap.fill(final.reasoning, width=80))
     
-    # 变更统计
+    # Change statistics
     inst_diff = stats["final_instances"] - stats["draft_instances"]
     conn_diff = stats["final_connections"] - stats["draft_connections"]
     
-    print(f"\n📈 变更统计:")
-    print(f"   元件数量: {stats['draft_instances']} → {stats['final_instances']} "
+    print(f"\n📈 Change Statistics:")
+    print(f"   Component count: {stats['draft_instances']} → {stats['final_instances']} "
           f"({'+'if inst_diff >= 0 else ''}{inst_diff})")
-    print(f"   连接数量: {stats['draft_connections']} → {stats['final_connections']} "
+    print(f"   Connection count: {stats['draft_connections']} → {stats['final_connections']} "
           f"({'+'if conn_diff >= 0 else ''}{conn_diff})")
-    print(f"\n⏱️  性能统计:")
-    print(f"   生成耗时: {stats['gen_time']:.2f}s")
-    print(f"   校验耗时: {stats['ver_time']:.2f}s")
-    print(f"   总耗时: {stats['gen_time'] + stats['ver_time']:.2f}s")
+    print(f"\n⏱️  Performance Statistics:")
+    print(f"   Generation time: {stats['gen_time']:.2f}s")
+    print(f"   Verification time: {stats['ver_time']:.2f}s")
+    print(f"   Total time: {stats['gen_time'] + stats['ver_time']:.2f}s")
 
 
 def save_design(design, output_path: str):
-    """保存设计到文件"""
+    """Save the design to a file"""
     os.makedirs(os.path.dirname(output_path), exist_ok=True)
     with open(output_path, "w", encoding="utf-8") as f:
         json.dump(design.model_dump(), f, indent=2, ensure_ascii=False)
-    print(f"\n📁 最终设计已保存至: {output_path}")
+    print(f"\n📁 Final design has been saved to: {output_path}")
 
 
 def run_compiler(args):
-    """运行编译器"""
-    # 配置参数
+    """Run the compiler"""
+    # Configuration parameters
     API_BASE = os.getenv("API_BASE")
     API_KEY = os.getenv("API_KEY")
     CHAT_MODEL = os.getenv("llm_model_name", "DeepSeek-V3.2")
@@ -67,18 +67,18 @@ def run_compiler(args):
     VERIFIER_PROMPT_PATH = args.verifier_prompt or "./data/verifier_prompt.md"
     OUTPUT_PATH = args.output or "./data/final_design.json"
     
-    # 测试协议（可以从文件读取或使用默认）
+    # Test protocol (can be loaded from a file or use the default)
     if args.protocol:
         with open(args.protocol, "r", encoding="utf-8") as f:
             user_protocol = f.read()
     else:
         user_protocol = """
-        操作步骤：
-        1. 取400μL样本加入到1.5mL无核酸酶离心管中，再向离心管中依次加入10μL去宿主试剂SA， 50μL去宿主缓冲液，10μL去宿主试剂M，放置到恒温震荡金属浴上37℃、1000rpm反应5min；
+        Operation steps:
+        1. Add 400 μL sample to a 1.5 mL nuclease-free centrifuge tube, then sequentially add 10 μL host depletion reagent SA, 50 μL host depletion buffer, and 10 μL host depletion reagent M into the tube, and place it on a thermostatic shaking metal bath for reaction at 37°C and 1000 rpm for 5 min;
         """
     
     try:
-        # 创建编译器
+        # Create compiler
         compiler = create_compiler(
             api_base=API_BASE,
             api_key=API_KEY,
@@ -90,30 +90,30 @@ def run_compiler(args):
             temperature=0.0
         )
         
-        # 执行编译
+        # Execute compilation
         result = compiler.compile(user_protocol)
         
-        # 打印对比报告
+        # Print comparison report
         print_design_comparison(
             result["draft"],
             result["final"],
             result["stats"]
         )
         
-        # 保存结果
+        # Save result
         save_design(result["final"], OUTPUT_PATH)
         
         print("=" * 60)
-        print("✅ 编译完成！")
+        print("✅ Compilation completed!")
         
     except Exception as e:
-        print(f"\n❌ 错误: {e}")
+        print(f"\n❌ Error: {e}")
         import traceback
         traceback.print_exc()
 
 
 def run_build_kb(args):
-    """构建知识库"""
+    """Build the knowledge base"""
     API_BASE = os.getenv("API_BASE")
     API_KEY = os.getenv("API_KEY")
     EMBED_MODEL = os.getenv("embedding_model_name", "GLM-Embedding-2")
@@ -133,40 +133,40 @@ def run_build_kb(args):
         )
         
         print("\n" + "=" * 60)
-        print("📊 构建统计")
+        print("📊 Build Statistics")
         print("=" * 60)
-        print(f"✅ 总文档块数: {stats['total_chunks']}")
-        print(f"✅ 标题切分数: {stats['header_splits']}")
+        print(f"✅ Total document chunks: {stats['total_chunks']}")
+        print(f"✅ Header splits: {stats['header_splits']}")
         print("=" * 60)
         
     except Exception as e:
-        print(f"\n❌ 错误: {e}")
+        print(f"\n❌ Error: {e}")
         import traceback
         traceback.print_exc()
 
 
 def main():
-    """主函数"""
-    parser = argparse.ArgumentParser(description="生物芯片编译器CLI工具")
-    subparsers = parser.add_subparsers(dest="command", help="子命令")
+    """Main function"""
+    parser = argparse.ArgumentParser(description="Biochip Compiler CLI Tool")
+    subparsers = parser.add_subparsers(dest="command", help="Subcommands")
     
-    # 编译器子命令
-    compile_parser = subparsers.add_parser("compile", help="运行编译器")
-    compile_parser.add_argument("--protocol", type=str, help="协议文件路径")
-    compile_parser.add_argument("--db-path", type=str, help="向量数据库路径")
-    compile_parser.add_argument("--compiler-prompt", type=str, help="编译器Prompt路径")
-    compile_parser.add_argument("--verifier-prompt", type=str, help="校验器Prompt路径")
-    compile_parser.add_argument("--output", type=str, help="输出文件路径")
+    # Compiler subcommand
+    compile_parser = subparsers.add_parser("compile", help="Run the compiler")
+    compile_parser.add_argument("--protocol", type=str, help="Path to the protocol file")
+    compile_parser.add_argument("--db-path", type=str, help="Path to the vector database")
+    compile_parser.add_argument("--compiler-prompt", type=str, help="Path to the compiler prompt")
+    compile_parser.add_argument("--verifier-prompt", type=str, help="Path to the verifier prompt")
+    compile_parser.add_argument("--output", type=str, help="Path to the output file")
     
-    # 知识库构建子命令
-    kb_parser = subparsers.add_parser("build-kb", help="构建知识库")
-    kb_parser.add_argument("--input", type=str, default="./data/knowledge.md", help="输入Markdown文件")
-    kb_parser.add_argument("--output", type=str, default="./chroma_db", help="输出数据库路径")
-    kb_parser.add_argument("--chunk-size", type=int, default=500, help="文本块大小")
-    kb_parser.add_argument("--chunk-overlap", type=int, default=50, help="文本块重叠")
-    kb_parser.add_argument("--batch-size", type=int, default=32, help="批处理大小")
-    kb_parser.add_argument("--no-clear", action="store_true", help="不清理旧数据库")
-    kb_parser.add_argument("--no-preview", action="store_true", help="不预览切分效果")
+    # Knowledge base build subcommand
+    kb_parser = subparsers.add_parser("build-kb", help="Build the knowledge base")
+    kb_parser.add_argument("--input", type=str, default="./data/knowledge.md", help="Input Markdown file")
+    kb_parser.add_argument("--output", type=str, default="./chroma_db", help="Output database path")
+    kb_parser.add_argument("--chunk-size", type=int, default=500, help="Text chunk size")
+    kb_parser.add_argument("--chunk-overlap", type=int, default=50, help="Text chunk overlap")
+    kb_parser.add_argument("--batch-size", type=int, default=32, help="Batch size")
+    kb_parser.add_argument("--no-clear", action="store_true", help="Do not clear the existing database")
+    kb_parser.add_argument("--no-preview", action="store_true", help="Do not preview the chunk splitting result")
     
     args = parser.parse_args()
     
