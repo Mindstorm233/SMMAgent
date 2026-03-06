@@ -1,0 +1,7 @@
+.env
+__pycache__/
+.vscode/
+chroma_db/
+tests/
+outputs/
+history/

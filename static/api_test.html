@@ -1,0 +1,485 @@
+<!doctype html>
+<html lang="zh-CN" data-theme="light">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>MicroChip API Tester (MVP)</title>
+    <style>
+        body {
+            font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, "PingFang SC", "Hiragino Sans GB", "Microsoft Yahei", Arial;
+            margin: 0;
+        }
+
+        header {
+            padding: 14px 18px;
+            border-bottom: 1px solid #e5e7eb;
+            display: flex;
+            gap: 12px;
+            align-items: center;
+        }
+
+        header h1 {
+            font-size: 16px;
+            margin: 0;
+        }
+
+        header .hint {
+            color: #6b7280;
+            font-size: 12px;
+        }
+
+        main {
+            padding: 18px;
+            display: grid;
+            grid-template-columns: 420px 1fr;
+            gap: 16px;
+        }
+
+        .card {
+            border: 1px solid #e5e7eb;
+            border-radius: 12px;
+            padding: 14px;
+            background: #fff;
+        }
+
+        .card h2 {
+            font-size: 14px;
+            margin: 0 0 10px;
+        }
+
+        .row {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        button {
+            border: 1px solid #d1d5db;
+            background: #f9fafb;
+            padding: 8px 10px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 13px;
+        }
+
+        button.primary {
+            background: #111827;
+            color: #fff;
+            border-color: #111827;
+        }
+
+        button.danger {
+            background: #b91c1c;
+            color: #fff;
+            border-color: #b91c1c;
+        }
+
+        button:disabled {
+            opacity: .55;
+            cursor: not-allowed;
+        }
+
+        input[type="text"] {
+            width: 100%;
+            padding: 8px 10px;
+            border: 1px solid #d1d5db;
+            border-radius: 10px;
+            font-size: 13px;
+        }
+
+        textarea {
+            width: 100%;
+            min-height: 170px;
+            padding: 10px;
+            border: 1px solid #d1d5db;
+            border-radius: 10px;
+            font-size: 13px;
+            line-height: 1.4;
+        }
+
+        label {
+            font-size: 12px;
+            color: #374151;
+            display: block;
+            margin: 10px 0 6px;
+        }
+
+        pre {
+            margin: 0;
+            white-space: pre-wrap;
+            word-break: break-word;
+            font-size: 12px;
+            line-height: 1.45;
+            background: #0b1020;
+            color: #dbeafe;
+            padding: 12px;
+            border-radius: 12px;
+            overflow: auto;
+            max-height: 70vh;
+        }
+
+        .muted {
+            color: #6b7280;
+            font-size: 12px;
+        }
+
+        .kv {
+            font-size: 12px;
+            color: #111827;
+            background: #f3f4f6;
+            padding: 8px 10px;
+            border-radius: 10px;
+        }
+
+        .grid2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+
+        .sep {
+            height: 1px;
+            background: #e5e7eb;
+            margin: 12px 0;
+        }
+    </style>
+</head>
+
+<body>
+    <header>
+        <h1>🧪 MicroChip API Tester</h1>
+        <div class="hint">点击按钮测试所有 API（样例数据已硬编码）。Base URL 默认为同源。</div>
+    </header>
+
+    <main>
+        <!-- Left controls -->
+        <section class="card">
+            <h2>1) 基本信息</h2>
+
+            <div class="row">
+                <button class="primary" id="btnHealth">GET /api/v1/health</button>
+                <button class="primary" id="btnMeta">GET /api/v1/meta/models</button>
+            </div>
+
+            <div class="sep"></div>
+
+            <h2>2) 编译任务（Compile + Job）</h2>
+
+            <label>Protocol Text（硬编码样例，可自行修改）</label>
+            <textarea id="protocolText"></textarea>
+
+            <div class="grid2">
+                <div>
+                    <label>Job ID（用于查询/取消）</label>
+                    <input type="text" id="jobId" placeholder="job_xxx" />
+                </div>
+                <div>
+                    <label>Compile ID（用于取结果/历史详情）</label>
+                    <input type="text" id="compileId" placeholder="compile_xxx" />
+                </div>
+            </div>
+
+            <div class="row" style="margin-top: 10px;">
+                <button class="primary" id="btnCreateCompile">POST /api/v1/compile</button>
+                <button id="btnGetJob">GET /api/v1/jobs/{job_id}</button>
+                <button class="danger" id="btnCancelJob">POST /api/v1/jobs/{job_id}/cancel</button>
+                <button id="btnGetResult">GET /api/v1/compile/{compile_id}/result</button>
+            </div>
+
+            <div class="sep"></div>
+
+            <h2>3) History</h2>
+            <div class="row">
+                <button class="primary" id="btnHistoryList">GET /api/v1/history</button>
+                <button id="btnHistoryDetail">GET /api/v1/history/{compile_id}</button>
+            </div>
+
+            <div class="sep"></div>
+
+            <h2>4) 一键流程（推荐）</h2>
+            <div class="row">
+                <button class="primary" id="btnRunAll">▶ Run: create → poll → result → history</button>
+                <button id="btnClearLog">🧹 Clear Output</button>
+            </div>
+
+            <p class="muted" style="margin-top: 10px;">
+                小提示：<br>
+                - “一键流程”会创建 compile，轮询 job 直到结束，然后自动拉取 result，并刷新 history。<br>
+                - 如果你还没建库，请先在命令行运行 build-kb，否则 compile 可能报找不到 chroma_db。🙂
+            </p>
+        </section>
+
+        <!-- Right output -->
+        <section class="card">
+            <h2>输出（Response / Error）</h2>
+            <div class="row" style="margin-bottom: 10px;">
+                <div class="kv">Status: <span id="statusText">Idle</span></div>
+                <div class="kv">Last Job: <span id="lastJob">-</span></div>
+                <div class="kv">Last Compile: <span id="lastCompile">-</span></div>
+            </div>
+            <pre id="output">{ "message": "Click a button to test an API." }</pre>
+        </section>
+    </main>
+
+    <script>
+        // -----------------------------
+        // Hardcoded sample data
+        // -----------------------------
+        const SAMPLE_PROTOCOL = `操作步骤：
+1. 取400μL样本加入到1.5mL无核酸酶离心管中；
+2. 依次加入10μL去宿主试剂SA，50μL去宿主缓冲液，10μL去宿主试剂M；
+3. 放置到恒温震荡金属浴上37℃、1000rpm反应5min；
+4. 结束后进行后续分离/收集（可按你的实际流程补充）。`;
+
+        // If you want to override compile request fields, change here (still hardcoded).
+        // Note: models/paths/options are optional; backend defaults should use .env.
+        const SAMPLE_COMPILE_REQUEST = () => ({
+            protocol_text: document.getElementById('protocolText').value.trim() || SAMPLE_PROTOCOL,
+            models: {},  // use backend env defaults
+            paths: {},   // use backend defaults: ./chroma_db + ./data/*.md
+            options: { return_draft: true, trace: true }
+        });
+
+        // -----------------------------
+        // Helpers
+        // -----------------------------
+        const $ = (id) => document.getElementById(id);
+
+        function setStatus(text) { $('statusText').textContent = text; }
+        function setLast(jobId, compileId) {
+            if (jobId) $('lastJob').textContent = jobId;
+            if (compileId) $('lastCompile').textContent = compileId;
+        }
+
+        function pretty(obj) {
+            return JSON.stringify(obj, null, 2);
+        }
+
+        function show(obj) {
+            $('output').textContent = typeof obj === 'string' ? obj : pretty(obj);
+        }
+
+        async function request(path, options = {}) {
+            const res = await fetch(path, {
+                headers: { 'Content-Type': 'application/json', ...(options.headers || {}) },
+                ...options,
+            });
+
+            const text = await res.text();
+            const data = text ? (tryJson(text) ?? text) : null;
+
+            if (!res.ok) {
+                const msg = (data && typeof data === 'object' && (data.detail || data.error?.message)) ? (data.detail || data.error?.message) : `${res.status} ${res.statusText}`;
+                const err = new Error(msg);
+                err.response = data;
+                err.status = res.status;
+                throw err;
+            }
+            return data;
+        }
+
+        function tryJson(text) {
+            try { return JSON.parse(text); } catch { return null; }
+        }
+
+        async function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
+
+        // Poll job until finished (succeeded/failed/cancelled)
+        async function pollJob(jobId, intervalMs = 800, timeoutMs = 120000) {
+            const start = Date.now();
+            while (true) {
+                if (Date.now() - start > timeoutMs) {
+                    throw new Error(`Polling timeout after ${Math.round(timeoutMs / 1000)}s`);
+                }
+                const job = await request(`/api/v1/jobs/${encodeURIComponent(jobId)}`, { method: 'GET' });
+                show(job);
+                const st = job.status;
+                const pct = job.progress?.percent ?? 0;
+                setStatus(`${st} (${pct}%) - ${job.progress?.stage || ''}`);
+
+                if (st === 'succeeded' || st === 'failed' || st === 'cancelled') {
+                    return job;
+                }
+                await sleep(intervalMs);
+            }
+        }
+
+        // -----------------------------
+        // Bind buttons
+        // -----------------------------
+        document.addEventListener('DOMContentLoaded', () => {
+            $('protocolText').value = SAMPLE_PROTOCOL;
+
+            $('btnHealth').onclick = async () => {
+                try {
+                    setStatus('Calling /health ...');
+                    const data = await request('/api/v1/health');
+                    setStatus('OK');
+                    show(data);
+                } catch (e) {
+                    setStatus('Error');
+                    show({ error: e.message, response: e.response || null });
+                }
+            };
+
+            $('btnMeta').onclick = async () => {
+                try {
+                    setStatus('Calling /meta/models ...');
+                    const data = await request('/api/v1/meta/models');
+                    setStatus('OK');
+                    show(data);
+                } catch (e) {
+                    setStatus('Error');
+                    show({ error: e.message, response: e.response || null });
+                }
+            };
+
+            $('btnCreateCompile').onclick = async () => {
+                try {
+                    setStatus('Creating compile job ...');
+                    const payload = SAMPLE_COMPILE_REQUEST();
+                    const data = await request('/api/v1/compile', { method: 'POST', body: JSON.stringify(payload) });
+
+                    const jobId = data.job_id;
+                    $('jobId').value = jobId;
+                    setLast(jobId, null);
+
+                    setStatus('Job queued');
+                    show({ request: payload, response: data });
+                } catch (e) {
+                    setStatus('Error');
+                    show({ error: e.message, response: e.response || null });
+                }
+            };
+
+            $('btnGetJob').onclick = async () => {
+                const jobId = $('jobId').value.trim();
+                if (!jobId) return show({ error: "Please input job_id first." });
+
+                try {
+                    setStatus('Fetching job ...');
+                    const data = await request(`/api/v1/jobs/${encodeURIComponent(jobId)}`);
+                    setLast(jobId, data.result_ref?.id || null);
+
+                    if (data.result_ref?.id) $('compileId').value = data.result_ref.id;
+
+                    setStatus('OK');
+                    show(data);
+                } catch (e) {
+                    setStatus('Error');
+                    show({ error: e.message, response: e.response || null });
+                }
+            };
+
+            $('btnCancelJob').onclick = async () => {
+                const jobId = $('jobId').value.trim();
+                if (!jobId) return show({ error: "Please input job_id first." });
+
+                try {
+                    setStatus('Cancelling job ...');
+                    const data = await request(`/api/v1/jobs/${encodeURIComponent(jobId)}/cancel`, { method: 'POST', body: '{}' });
+                    setStatus('Cancel requested');
+                    show(data);
+                } catch (e) {
+                    setStatus('Error');
+                    show({ error: e.message, response: e.response || null });
+                }
+            };
+
+            $('btnGetResult').onclick = async () => {
+                const compileId = $('compileId').value.trim();
+                if (!compileId) return show({ error: "Please input compile_id first." });
+
+                try {
+                    setStatus('Fetching result ...');
+                    const data = await request(`/api/v1/compile/${encodeURIComponent(compileId)}/result`);
+                    setLast(null, compileId);
+                    setStatus('OK');
+                    show(data);
+                } catch (e) {
+                    setStatus('Error');
+                    show({ error: e.message, response: e.response || null });
+                }
+            };
+
+            $('btnHistoryList').onclick = async () => {
+                try {
+                    setStatus('Fetching history ...');
+                    const data = await request('/api/v1/history');
+                    setStatus('OK');
+                    show(data);
+                } catch (e) {
+                    setStatus('Error');
+                    show({ error: e.message, response: e.response || null });
+                }
+            };
+
+            $('btnHistoryDetail').onclick = async () => {
+                const compileId = $('compileId').value.trim();
+                if (!compileId) return show({ error: "Please input compile_id first." });
+
+                try {
+                    setStatus('Fetching history detail ...');
+                    const data = await request(`/api/v1/history/${encodeURIComponent(compileId)}`);
+                    setStatus('OK');
+                    show(data);
+                } catch (e) {
+                    setStatus('Error');
+                    show({ error: e.message, response: e.response || null });
+                }
+            };
+
+            $('btnRunAll').onclick = async () => {
+                try {
+                    setStatus('RunAll: creating job ...');
+
+                    // 1) create compile
+                    const payload = SAMPLE_COMPILE_REQUEST();
+                    const created = await request('/api/v1/compile', { method: 'POST', body: JSON.stringify(payload) });
+                    const jobId = created.job_id;
+                    $('jobId').value = jobId;
+                    setLast(jobId, null);
+                    show({ step: 'create', request: payload, response: created });
+
+                    // 2) poll job
+                    setStatus('RunAll: polling job ...');
+                    const job = await pollJob(jobId, 800, 180000);
+                    const compileId = job.result_ref?.id;
+                    if (compileId) {
+                        $('compileId').value = compileId;
+                        setLast(jobId, compileId);
+                    }
+
+                    // 3) fetch result if succeeded
+                    if (job.status === 'succeeded' && compileId) {
+                        setStatus('RunAll: fetching result ...');
+                        const result = await request(`/api/v1/compile/${encodeURIComponent(compileId)}/result`);
+                        show({ step: 'result', compile_id: compileId, result });
+                    } else {
+                        show({ step: 'job_finished', job });
+                    }
+
+                    // 4) fetch history
+                    setStatus('RunAll: fetching history ...');
+                    const history = await request('/api/v1/history');
+                    setStatus('RunAll: done ✅');
+                    show({ step: 'history', history });
+
+                } catch (e) {
+                    setStatus('Error');
+                    show({ error: e.message, response: e.response || null });
+                }
+            };
+
+            $('btnClearLog').onclick = () => {
+                setStatus('Idle');
+                setLast('-', '-');
+                show({ message: 'Cleared output.' });
+            };
+        });
+    </script>
+</body>
+
+</html>

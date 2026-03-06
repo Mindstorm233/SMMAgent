@@ -1,0 +1,179 @@
+<!doctype html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Draw API Test</title>
+    <style>
+        body {
+            font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+            margin: 24px;
+        }
+
+        .card {
+            border: 1px solid #ddd;
+            border-radius: 12px;
+            padding: 16px;
+            max-width: 720px;
+        }
+
+        .row {
+            margin: 12px 0;
+        }
+
+        button {
+            padding: 10px 14px;
+            border-radius: 10px;
+            border: 1px solid #ccc;
+            cursor: pointer;
+        }
+
+        button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        pre {
+            background: #f7f7f7;
+            padding: 12px;
+            border-radius: 10px;
+            overflow: auto;
+        }
+
+        .ok {
+            color: #0a7a0a;
+        }
+
+        .err {
+            color: #b00020;
+        }
+
+        .small {
+            color: #666;
+            font-size: 12px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="card">
+        <h2>🧪 Microfluidic Draw API Test</h2>
+        <div class="row">
+            <div class="small">选择 IR JSON 文件（会按 <code>{ "chip_data": ... }</code> 的结构发送到 <code>/api/v1/draw</code>）
+            </div>
+            <input id="file" type="file" accept=".json,application/json" />
+        </div>
+
+        <div class="row">
+            <label>
+                API 地址：
+                <input id="apiUrl" type="text" value="/api/v1/draw" style="width: 60%;" />
+            </label>
+            <div class="small">如果你不是通过同域静态页访问，可写完整地址，例如：<code>http://127.0.0.1:8000/api/v1/draw</code></div>
+        </div>
+
+        <div class="row">
+            <button id="btn" disabled>🚀 发送并下载 PNG</button>
+        </div>
+
+        <div class="row">
+            <div id="status" class="small">状态：等待选择文件</div>
+        </div>
+
+        <div class="row">
+            <div class="small">文件预览（前 2KB）：</div>
+            <pre id="preview">(empty)</pre>
+        </div>
+    </div>
+
+    <script>
+        const fileInput = document.getElementById("file");
+        const btn = document.getElementById("btn");
+        const statusEl = document.getElementById("status");
+        const previewEl = document.getElementById("preview");
+        const apiUrlEl = document.getElementById("apiUrl");
+
+        let parsedJson = null;
+        let filenameStem = "microfluidic_layout";
+
+        function setStatus(msg, cls) {
+            statusEl.className = "small " + (cls || "");
+            statusEl.textContent = "状态：" + msg;
+        }
+
+        fileInput.addEventListener("change", async () => {
+            parsedJson = null;
+            btn.disabled = true;
+
+            const f = fileInput.files && fileInput.files[0];
+            if (!f) {
+                setStatus("等待选择文件", "");
+                previewEl.textContent = "(empty)";
+                return;
+            }
+
+            filenameStem = (f.name || "layout.json").replace(/\.json$/i, "") || "microfluidic_layout";
+
+            try {
+                const text = await f.text();
+                previewEl.textContent = text.slice(0, 2048) + (text.length > 2048 ? "\n... (truncated)" : "");
+                parsedJson = JSON.parse(text);
+                btn.disabled = false;
+                setStatus("JSON 解析成功，准备发送 ✅", "ok");
+            } catch (e) {
+                setStatus("JSON 解析失败：" + e.message, "err");
+            }
+        });
+
+        btn.addEventListener("click", async () => {
+            if (!parsedJson) return;
+
+            btn.disabled = true;
+            setStatus("请求中…", "");
+
+            const apiUrl = (apiUrlEl.value || "/api/v1/draw").trim();
+
+            try {
+                const resp = await fetch(apiUrl, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ chip_data: parsedJson })
+                });
+
+                if (!resp.ok) {
+                    // 尝试读取错误信息
+                    let detail = "";
+                    try { detail = await resp.text(); } catch (_) { }
+                    throw new Error(`HTTP ${resp.status} ${resp.statusText} ${detail ? "- " + detail : ""}`);
+                }
+
+                const blob = await resp.blob();
+
+                // 简单校验 content-type（不强制）
+                const ct = resp.headers.get("content-type") || "";
+                if (ct && !ct.includes("image/png")) {
+                    console.warn("Warning: content-type is not image/png:", ct);
+                }
+
+                // 触发下载
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement("a");
+                a.href = url;
+                a.download = `${filenameStem}.png`;
+                document.body.appendChild(a);
+                a.click();
+                a.remove();
+                URL.revokeObjectURL(url);
+
+                setStatus("下载已触发 ✅（请查看浏览器下载栏）", "ok");
+            } catch (e) {
+                setStatus("请求失败：" + e.message, "err");
+            } finally {
+                btn.disabled = false;
+            }
+        });
+    </script>
+</body>
+
+</html>

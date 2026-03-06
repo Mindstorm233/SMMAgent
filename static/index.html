@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="light">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MicroChip Designer - Microfluidics Protocol Compiler</title>
+
+  <link rel="stylesheet" href="css/variables.css">
+  <link rel="stylesheet" href="css/components.css">
+  <link rel="stylesheet" href="css/style.css">
+
+  <link rel="icon" type="image/svg+xml"
+    href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🧬</text></svg>">
+</head>
+
+<body>
+  <div class="app">
+    <!-- Navigation Bar -->
+    <nav class="navbar">
+      <div class="navbar-brand">
+        <span class="navbar-logo">🧬</span>
+        <span class="navbar-title">MicroChip Designer</span>
+      </div>
+
+      <div class="navbar-nav">
+        <a href="index.html" class="nav-link active">
+          <span>⚡</span>
+          <span>Generator</span>
+        </a>
+        <a href="history.html" class="nav-link">
+          <span>📋</span>
+          <span>History</span>
+        </a>
+      </div>
+
+      <div class="navbar-actions">
+        <button class="theme-toggle" aria-label="Toggle theme">
+          <span class="theme-icon-light">🌙</span>
+          <span class="theme-icon-dark">☀️</span>
+        </button>
+      </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="main-content">
+      <div class="generator-page">
+        <!-- Config Bar -->
+        <div class="generator-config">
+          <div class="config-bar" id="configBar">
+            <div class="config-item">
+              <span class="config-label">Loading...</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Main Generator Area -->
+        <div class="generator-main">
+          <!-- Left: Protocol Input -->
+          <div class="generator-input">
+            <div class="panel input-panel">
+              <div class="panel-header">
+                <div class="panel-title">
+                  <span>📝</span>
+                  <span>Protocol Input</span>
+                </div>
+              </div>
+              <div class="panel-body no-padding">
+                <textarea id="protocolInput" class="protocol-input" placeholder="请输入实验协议文本，然后点击 Generate..."></textarea>
+              </div>
+            </div>
+          </div>
+
+          <!-- Right: Result Output -->
+          <div class="generator-output">
+            <div class="panel" style="height: 100%;">
+              <div class="panel-header output-tabs">
+                <div class="tabs">
+                  <button class="tab active" data-tab="json">JSON</button>
+                  <button class="tab" data-tab="compare">Compare</button>
+                  <button class="tab" data-tab="evidence">Evidence</button>
+                  <button class="tab" data-tab="runbook">Runbook</button>
+                  <button class="tab" data-tab="schemes">Schemes</button>
+
+                </div>
+              </div>
+              <div class="panel-body output-content">
+                <div class="tab-content active" id="tab-json">
+                  <div class="empty-state">
+                    <div class="empty-state-icon">{ }</div>
+                    <div class="empty-state-title">No data yet</div>
+                    <div class="empty-state-text">Enter a protocol and click Generate to start</div>
+                  </div>
+                </div>
+
+                <div class="tab-content" id="tab-compare">
+                  <div class="empty-state">
+                    <div class="empty-state-icon">🔎</div>
+                    <div class="empty-state-title">No comparison yet</div>
+                    <div class="empty-state-text">Generate a result to see draft vs final comparison</div>
+                  </div>
+                </div>
+
+
+                <div class="tab-content" id="tab-evidence">
+                  <div class="empty-state">
+                    <div class="empty-state-icon">📚</div>
+                    <div class="empty-state-title">No evidence available</div>
+                    <div class="empty-state-text">Generate a result to see retrieved evidence</div>
+                  </div>
+                </div>
+
+                <div class="tab-content" id="tab-runbook">
+                  <div class="empty-state">
+                    <div class="empty-state-icon">📋</div>
+                    <div class="empty-state-title">No operation plan available</div>
+                    <div class="empty-state-text">Generate a result to see the operation timeline</div>
+                  </div>
+                </div>
+
+                <div class="tab-content" id="tab-schemes">
+                  <div class="empty-state">
+                    <div class="empty-state-icon">🖼️</div>
+                    <div class="empty-state-title">No schemes yet</div>
+                    <div class="empty-state-text">Generate a result to render the microfluidic layout</div>
+                  </div>
+                </div>
+
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Action Bar -->
+        <div class="action-bar">
+          <div class="action-buttons">
+            <button id="btnGenerate" class="btn btn-primary btn-lg">
+              <span>⚡</span>
+              <span>Generate</span>
+            </button>
+            <button id="btnStop" class="btn btn-danger" disabled>
+              <span>⏹</span>
+              <span>Stop</span>
+            </button>
+            <button id="btnClear" class="btn btn-ghost">
+              <span>🗑️</span>
+              <span>Clear</span>
+            </button>
+          </div>
+
+          <div class="progress-section">
+            <div class="progress-container">
+              <div class="progress-text">
+                <span class="progress-status">Idle</span>
+                <span class="progress-percent">0%</span>
+              </div>
+              <div class="progress-bar">
+                <div class="progress-fill" style="width: 0%"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </main>
+  </div>
+
+  <script src="js/theme.js"></script>
+  <script src="js/utils.js"></script>
+  <script src="js/api.js"></script>
+  <script src="js/app.js"></script>
+</body>
+
+</html>

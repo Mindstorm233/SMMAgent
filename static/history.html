@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="light">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Task History - MicroChip Designer</title>
+
+    <link rel="stylesheet" href="css/variables.css">
+    <link rel="stylesheet" href="css/components.css">
+    <link rel="stylesheet" href="css/style.css">
+
+    <link rel="icon" type="image/svg+xml"
+        href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🧬</text></svg>">
+</head>
+
+<body>
+    <div class="app">
+        <nav class="navbar">
+            <div class="navbar-brand">
+                <span class="navbar-logo">🧬</span>
+                <span class="navbar-title">MicroChip Designer</span>
+            </div>
+
+            <div class="navbar-nav">
+                <a href="index.html" class="nav-link">
+                    <span>⚡</span>
+                    <span>Generator</span>
+                </a>
+                <a href="history.html" class="nav-link active">
+                    <span>📋</span>
+                    <span>History</span>
+                </a>
+            </div>
+
+            <div class="navbar-actions">
+                <button class="theme-toggle" aria-label="Toggle theme">
+                    <span class="theme-icon-light">🌙</span>
+                    <span class="theme-icon-dark">☀️</span>
+                </button>
+            </div>
+        </nav>
+
+        <main class="main-content">
+            <div id="taskListView" class="history-page">
+                <div class="page-header">
+                    <h1 class="page-title">
+                        <span>📋</span>
+                        <span>Task History</span>
+                    </h1>
+                    <div class="search-box">
+                        <span>🔍</span>
+                        <input type="text" id="searchInput" placeholder="Search protocol preview...">
+                    </div>
+                </div>
+
+                <div class="task-list" id="taskList">
+                    <div class="empty-state">
+                        <div class="spinner spinner-lg"></div>
+                        <div class="empty-state-title mt-4">Loading history...</div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="taskDetailView" class="task-detail hidden">
+                <a href="#" class="back-link" onclick="HistoryApp.showTaskList(); return false;">
+                    <span>←</span>
+                    <span>Back to List</span>
+                </a>
+
+                <div class="task-detail-header">
+                    <h2 class="task-detail-title" id="detailTitle">Compile</h2>
+                    <div class="task-detail-meta" id="detailMeta"></div>
+                </div>
+
+                <div class="task-result">
+                    <div class="panel-header output-tabs">
+                        <div class="tabs">
+                            <button class="tab active" data-tab="detail-json">JSON</button>
+                            <button class="tab" data-tab="detail-evidence">Evidence</button>
+                            <button class="tab" data-tab="detail-runbook">Runbook</button>
+                        </div>
+                    </div>
+
+                    <div class="panel-body">
+                        <div class="tab-content active" id="tab-detail-json"></div>
+                        <div class="tab-content" id="tab-detail-evidence"></div>
+                        <div class="tab-content" id="tab-detail-runbook"></div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script src="js/theme.js"></script>
+    <script src="js/utils.js"></script>
+    <script src="js/api.js"></script>
+    <script>
+        const HistoryApp = {
+            items: [],
+            current: null,
+
+            async init() {
+                await this.load();
+                this.bind();
+            },
+
+            bind() {
+                const searchInput = document.getElementById('searchInput');
+                if (searchInput) {
+                    searchInput.addEventListener('input', Utils.debounce((e) => {
+                        this.filter(e.target.value);
+                    }, 250));
+                }
+
+                document.querySelectorAll('.tab').forEach(tab => {
+                    tab.addEventListener('click', (e) => {
+                        const tabName = e.target.dataset.tab;
+                        if (tabName && tabName.startsWith('detail-')) {
+                            this.switchDetailTab(tabName);
+                        }
+                    });
+                });
+            },
+
+            async load() {
+                try {
+                    const data = await API.listHistory();
+                    this.items = data.items || [];
+                    this.renderList(this.items);
+                } catch (e) {
+                    console.error(e);
+                    Utils.showToast('Failed to load history', 'error');
+                }
+            },
+
+            filter(q) {
+                const query = (q || '').toLowerCase();
+                const filtered = this.items.filter(it => (it.protocol_preview || '').toLowerCase().includes(query));
+                this.renderList(filtered);
+            },
+
+            renderList(items) {
+                const el = document.getElementById('taskList');
+                if (!el) return;
+
+                if (!items.length) {
+                    el.innerHTML = `
+            <div class="empty-state">
+              <div class="empty-state-icon">📋</div>
+              <div class="empty-state-title">No history yet</div>
+              <div class="empty-state-text">Generate your first chip design to see it here</div>
+            </div>`;
+                    return;
+                }
+
+                el.innerHTML = items.map(it => `
+          <div class="task-card" onclick="HistoryApp.open('${it.compile_id}')">
+            <div class="task-name">${Utils.escapeHtml(it.protocol_preview || it.compile_id)}</div>
+            <div class="task-meta">
+              <div class="task-meta-item"><span>📅</span><span>${Utils.formatDate(it.created_at)}</span></div>
+              <div class="task-meta-item"><span>⏱️</span><span>${Utils.formatDuration(it.duration_ms)}</span></div>
+              <div class="task-meta-item">${this.badge(it.status)}</div>
+            </div>
+          </div>
+        `).join('');
+            },
+
+            badge(status) {
+                const map = {
+                    succeeded: '<span class="badge badge-success">✅ Succeeded</span>',
+                    failed: '<span class="badge badge-error">❌ Failed</span>',
+                    cancelled: '<span class="badge badge-warning">⏹ Cancelled</span>'
+                };
+                return map[status] || `<span class="badge badge-primary">${Utils.escapeHtml(status || 'unknown')}</span>`;
+            },
+
+            async open(compileId) {
+                try {
+                    const data = await API.getHistoryDetail(compileId);
+                    this.current = data;
+
+                    document.getElementById('taskListView').classList.add('hidden');
+                    document.getElementById('taskDetailView').classList.remove('hidden');
+
+                    document.getElementById('detailTitle').textContent = compileId;
+                    document.getElementById('detailMeta').innerHTML = `
+            <div class="task-meta-item"><span>📅</span><span>${Utils.formatDate(data.created_at || data.trace?.[0]?.ts || new Date())}</span></div>
+            <div class="task-meta-item"><span>📚</span><span>RAG docs: ${data.stats?.doc_count ?? '-'}</span></div>
+            <div class="task-meta-item"><span>⏱️</span><span>Total: ${Utils.formatDuration(data.stats?.duration_ms ?? 0)}</span></div>
+          `;
+
+                    this.renderDetailJSON(data.final);
+                    this.renderDetailEvidence(data.evidence || []);
+                    this.renderDetailRunbook(data.final?.plan || []);
+                    this.switchDetailTab('detail-json');
+                } catch (e) {
+                    console.error(e);
+                    Utils.showToast('Failed to load detail', 'error');
+                }
+            },
+
+            switchDetailTab(name) {
+                document.querySelectorAll('.tab').forEach(tab => {
+                    if (tab.dataset.tab && tab.dataset.tab.startsWith('detail-')) {
+                        tab.classList.toggle('active', tab.dataset.tab === name);
+                    }
+                });
+                document.querySelectorAll('.tab-content').forEach(content => {
+                    if (content.id && content.id.startsWith('tab-detail-')) {
+                        content.classList.toggle('active', content.id === `tab-${name}`);
+                    }
+                });
+            },
+
+            renderDetailJSON(finalJson) {
+                const container = document.getElementById('tab-detail-json');
+                if (!container) return;
+                const sections = ['instances', 'connections', 'plan'];
+                container.innerHTML = sections.map(section => `
+          <div class="collapsible open">
+            <div class="collapsible-header" onclick="this.parentElement.classList.toggle('open')">
+              <div class="collapsible-title">
+                <span>${section === 'instances' ? '🧩' : section === 'connections' ? '🔗' : '📋'}</span>
+                <span>${section}</span>
+                <span class="badge badge-primary">${(finalJson?.[section] || []).length} items</span>
+              </div>
+              <span class="collapsible-icon">▼</span>
+            </div>
+            <div class="collapsible-content">
+              <div class="code-block">
+                <pre class="code-content">${Utils.highlightJSON(finalJson?.[section] || [])}</pre>
+              </div>
+            </div>
+          </div>
+        `).join('');
+            },
+
+            renderDetailEvidence(evidence) {
+                const container = document.getElementById('tab-detail-evidence');
+                if (!container) return;
+                if (!evidence.length) {
+                    container.innerHTML = `
+            <div class="empty-state">
+              <div class="empty-state-icon">📚</div>
+              <div class="empty-state-title">No evidence</div>
+            </div>`;
+                    return;
+                }
+                container.innerHTML = evidence.map(ev => `
+          <div class="evidence-card">
+            <div class="evidence-header">
+              <div class="evidence-source"><span>📄</span><span>${Utils.escapeHtml(ev.source || 'ref')}</span></div>
+              <div class="evidence-score">Score: ${((ev.score || 1) * 100).toFixed(0)}%</div>
+            </div>
+            <div class="evidence-snippet">${Utils.escapeHtml(ev.snippet || '')}</div>
+            <div class="evidence-location">📍 ${Utils.escapeHtml(ev.location || '')}</div>
+          </div>
+        `).join('');
+            },
+
+            renderDetailRunbook(plan) {
+                const container = document.getElementById('tab-detail-runbook');
+                if (!container) return;
+                if (!plan.length) {
+                    container.innerHTML = `
+            <div class="empty-state">
+              <div class="empty-state-icon">📋</div>
+              <div class="empty-state-title">No plan</div>
+            </div>`;
+                    return;
+                }
+                container.innerHTML = `
+          <div class="timeline">
+            ${plan.map(step => `
+              <div class="timeline-item">
+                <div class="timeline-dot"></div>
+                <div class="timeline-content">
+                  <div class="timeline-step">Step ${step.step_id ?? '-'}</div>
+                  <div class="timeline-action">${Utils.escapeHtml(step.action || '')}</div>
+                  <div class="timeline-duration">⏱️ Duration: ${step.duration_s ?? 0}s</div>
+                </div>
+              </div>
+            `).join('')}
+          </div>
+        `;
+            },
+
+            showTaskList() {
+                document.getElementById('taskListView').classList.remove('hidden');
+                document.getElementById('taskDetailView').classList.add('hidden');
+                this.current = null;
+            }
+        };
+
+        document.addEventListener('DOMContentLoaded', () => HistoryApp.init());
+        window.HistoryApp = HistoryApp;
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,184 @@
+{
+  "reasoning": "根据protocol描述，需要实现单细胞液滴包裹，包括细胞悬液、油相、裂解液的注入、混合、液滴生成和收集。由于元件库中提供的元件（M4、M5、P8）主要用于试剂合并，与液滴生成协议不完全匹配，但可以基于现有元件进行适配。使用M5作为主要混合模块，因为它设计用于通过串联微腔进行小体积合并，适合细胞悬液和裂解液的混合。使用P8作为存储模块来预装试剂。需要添加额外的入口和出口来模拟油相注入和液滴收集。由于缺乏专门的液滴生成元件（如流动聚焦结构），使用M5的混合功能来近似混合步骤，并假设液滴生成在出口处发生。操作计划包括依次注入试剂、启动载液进行混合，然后收集。",
+  "instances": [
+    {
+      "inst_id": "U001",
+      "lib_id": "P8",
+      "role": "storage_cell_suspension",
+      "domain": "meter",
+      "phase": "sample_prep",
+      "ports_liquid": "liq_in_1,liq_out_1",
+      "ports_air": "air_1",
+      "ports_act": "",
+      "ports_thermal": "",
+      "ports_magnetic": "",
+      "reagent_name": "cell_suspension",
+      "reagent_volume_uL": "50",
+      "reagent_state": "liquid",
+      "param_override": ""
+    },
+    {
+      "inst_id": "U002",
+      "lib_id": "P8",
+      "role": "storage_oil",
+      "domain": "meter",
+      "phase": "sample_prep",
+      "ports_liquid": "liq_in_1,liq_out_1",
+      "ports_air": "air_1",
+      "ports_act": "",
+      "ports_thermal": "",
+      "ports_magnetic": "",
+      "reagent_name": "oil",
+      "reagent_volume_uL": "100",
+      "reagent_state": "liquid",
+      "param_override": ""
+    },
+    {
+      "inst_id": "U003",
+      "lib_id": "P8",
+      "role": "storage_lysis_buffer",
+      "domain": "meter",
+      "phase": "lysis",
+      "ports_liquid": "liq_in_1,liq_out_1",
+      "ports_air": "air_1",
+      "ports_act": "",
+      "ports_thermal": "",
+      "ports_magnetic": "",
+      "reagent_name": "lysis_buffer",
+      "reagent_volume_uL": "50",
+      "reagent_state": "liquid",
+      "param_override": ""
+    },
+    {
+      "inst_id": "U004",
+      "lib_id": "M5",
+      "role": "mixer_droplet_generator",
+      "domain": "mix",
+      "phase": "sample_prep",
+      "ports_liquid": "liq_in_1,liq_out_1",
+      "ports_air": "air_1",
+      "ports_act": "",
+      "ports_thermal": "",
+      "ports_magnetic": "",
+      "reagent_name": "",
+      "reagent_volume_uL": "0",
+      "reagent_state": "empty",
+      "param_override": ""
+    },
+    {
+      "inst_id": "U005",
+      "lib_id": "P8",
+      "role": "collection_chamber",
+      "domain": "interface",
+      "phase": "detect",
+      "ports_liquid": "liq_in_1,liq_out_1",
+      "ports_air": "air_1",
+      "ports_act": "",
+      "ports_thermal": "",
+      "ports_magnetic": "",
+      "reagent_name": "",
+      "reagent_volume_uL": "0",
+      "reagent_state": "empty",
+      "param_override": ""
+    }
+  ],
+  "connections": [
+    {
+      "edge_id": "E001",
+      "from_inst": "U001",
+      "from_port": "liq_out_1",
+      "to_inst": "U004",
+      "to_port": "liq_in_1",
+      "channel": "liquid",
+      "domain": "mix",
+      "phase": "sample_prep"
+    },
+    {
+      "edge_id": "E002",
+      "from_inst": "U002",
+      "from_port": "liq_out_1",
+      "to_inst": "U004",
+      "to_port": "liq_in_1",
+      "channel": "liquid",
+      "domain": "mix",
+      "phase": "sample_prep"
+    },
+    {
+      "edge_id": "E003",
+      "from_inst": "U003",
+      "from_port": "liq_out_1",
+      "to_inst": "U004",
+      "to_port": "liq_in_1",
+      "channel": "liquid",
+      "domain": "mix",
+      "phase": "cross_phase"
+    },
+    {
+      "edge_id": "E004",
+      "from_inst": "U004",
+      "from_port": "liq_out_1",
+      "to_inst": "U005",
+      "to_port": "liq_in_1",
+      "channel": "liquid",
+      "domain": "interface",
+      "phase": "cross_phase"
+    }
+  ],
+  "plan": [
+    {
+      "step_id": 1,
+      "action": "press",
+      "target_inst": "U001",
+      "target_port": "act_1",
+      "value": "pressure=10",
+      "duration_s": 5,
+      "depends_on": "",
+      "domain": "meter",
+      "phase": "sample_prep"
+    },
+    {
+      "step_id": 2,
+      "action": "press",
+      "target_inst": "U003",
+      "target_port": "act_1",
+      "value": "pressure=10",
+      "duration_s": 5,
+      "depends_on": "1",
+      "domain": "meter",
+      "phase": "lysis"
+    },
+    {
+      "step_id": 3,
+      "action": "mix_bubble",
+      "target_inst": "U004",
+      "target_port": "air_1",
+      "value": "frequency=5",
+      "duration_s": 10,
+      "depends_on": "2",
+      "domain": "mix",
+      "phase": "sample_prep"
+    },
+    {
+      "step_id": 4,
+      "action": "press",
+      "target_inst": "U002",
+      "target_port": "act_1",
+      "value": "pressure=15",
+      "duration_s": 10,
+      "depends_on": "3",
+      "domain": "meter",
+      "phase": "sample_prep"
+    },
+    {
+      "step_id": 5,
+      "action": "wait",
+      "target_inst": "",
+      "target_port": "",
+      "value": "",
+      "duration_s": 30,
+      "depends_on": "4",
+      "domain": "utility",
+      "phase": "utility"
+    }
+  ]
+}

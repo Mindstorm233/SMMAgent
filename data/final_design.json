@@ -1,0 +1,183 @@
+{
+  "reasoning": "设计/审查的思路说明",
+  "instances": [
+    {
+      "inst_id": "U001",
+      "lib_id": "P6",
+      "role": "microchamber_storage",
+      "domain": "interface",
+      "phase": "sample_prep",
+      "ports_liquid": "liq_out_1",
+      "ports_air": "air_1",
+      "ports_act": "act_1",
+      "ports_thermal": "",
+      "ports_magnetic": "",
+      "reagent_name": "reagent_A",
+      "reagent_volume_uL": "5",
+      "reagent_state": "filled",
+      "param_override": ""
+    },
+    {
+      "inst_id": "U002",
+      "lib_id": "OUT",
+      "role": "carrier_flow",
+      "domain": "meter",
+      "phase": "sample_prep",
+      "ports_liquid": "liq_out_1",
+      "ports_air": "",
+      "ports_act": "",
+      "ports_thermal": "",
+      "ports_magnetic": "",
+      "reagent_name": "buffer",
+      "reagent_volume_uL": "100",
+      "reagent_state": "filled",
+      "param_override": ""
+    },
+    {
+      "inst_id": "U003",
+      "lib_id": "M5",
+      "role": "merging_chamber",
+      "domain": "merge",
+      "phase": "sample_prep",
+      "ports_liquid": "liq_in_1,liq_out_1",
+      "ports_air": "air_1",
+      "ports_act": "",
+      "ports_thermal": "",
+      "ports_magnetic": "",
+      "reagent_name": "",
+      "reagent_volume_uL": "0",
+      "reagent_state": "empty",
+      "param_override": ""
+    },
+    {
+      "inst_id": "U004",
+      "lib_id": "M7",
+      "role": "bubble_mixer",
+      "domain": "mix",
+      "phase": "sample_prep",
+      "ports_liquid": "liq_in_1,liq_out_1",
+      "ports_air": "air_1",
+      "ports_act": "",
+      "ports_thermal": "",
+      "ports_magnetic": "",
+      "reagent_name": "",
+      "reagent_volume_uL": "0",
+      "reagent_state": "empty",
+      "param_override": ""
+    },
+    {
+      "inst_id": "U005",
+      "lib_id": "AirVent",
+      "role": "air_vent",
+      "domain": "utility",
+      "phase": "utility",
+      "ports_liquid": "",
+      "ports_air": "air_1",
+      "ports_act": "",
+      "ports_thermal": "",
+      "ports_magnetic": "",
+      "reagent_name": "",
+      "reagent_volume_uL": "0",
+      "reagent_state": "empty",
+      "param_override": ""
+    }
+  ],
+  "connections": [
+    {
+      "edge_id": "E001",
+      "from_inst": "U002",
+      "from_port": "liq_out_1",
+      "to_inst": "U001",
+      "to_port": "liq_out_1",
+      "channel": "liquid",
+      "domain": "meter",
+      "phase": "sample_prep"
+    },
+    {
+      "edge_id": "E002",
+      "from_inst": "U001",
+      "from_port": "liq_out_1",
+      "to_inst": "U003",
+      "to_port": "liq_in_1",
+      "channel": "liquid",
+      "domain": "interface",
+      "phase": "sample_prep"
+    },
+    {
+      "edge_id": "E003",
+      "from_inst": "U003",
+      "from_port": "liq_out_1",
+      "to_inst": "U004",
+      "to_port": "liq_in_1",
+      "channel": "liquid",
+      "domain": "merge",
+      "phase": "sample_prep"
+    },
+    {
+      "edge_id": "E004",
+      "from_inst": "U003",
+      "from_port": "air_1",
+      "to_inst": "U005",
+      "to_port": "air_1",
+      "channel": "air",
+      "domain": "utility",
+      "phase": "cross_phase"
+    },
+    {
+      "edge_id": "E005",
+      "from_inst": "U004",
+      "from_port": "air_1",
+      "to_inst": "U005",
+      "to_port": "air_1",
+      "channel": "air",
+      "domain": "utility",
+      "phase": "cross_phase"
+    }
+  ],
+  "plan": [
+    {
+      "step_id": 1,
+      "action": "press",
+      "target_inst": "U001",
+      "target_port": "act_1",
+      "value": "open",
+      "duration_s": 2,
+      "depends_on": "",
+      "domain": "interface",
+      "phase": "sample_prep"
+    },
+    {
+      "step_id": 2,
+      "action": "flow_on",
+      "target_inst": "U002",
+      "target_port": "liq_out_1",
+      "value": "10",
+      "duration_s": 10,
+      "depends_on": "1",
+      "domain": "meter",
+      "phase": "sample_prep"
+    },
+    {
+      "step_id": 3,
+      "action": "mix_bubble",
+      "target_inst": "U004",
+      "target_port": "air_1",
+      "value": "5",
+      "duration_s": 30,
+      "depends_on": "2",
+      "domain": "mix",
+      "phase": "sample_prep"
+    },
+    {
+      "step_id": 4,
+      "action": "wait",
+      "target_inst": "",
+      "target_port": "",
+      "value": "",
+      "duration_s": 5,
+      "depends_on": "3",
+      "domain": "utility",
+      "phase": "utility"
+    }
+  ]
+}

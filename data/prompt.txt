@@ -1,0 +1,234 @@
+
+------
+
+## 六、Prompt
+
+### 6.1 第一段：设计
+
+把下面模板里的 `{ELEMENT_LIBRARY_JSON}`、`{PROTOCOL_TEXT}` 替换即可：
+
+```text
+你是一个“协议编译器”，负责把生物实验 protocol（自然语言）转换成可执行的器件组合：器件实例表（instance）、连接网表（netlist）、执行计划表（plan）。你必须严格使用我提供的元件库（ELEMENT_LIBRARY），不得虚构元件。
+
+输入：
+(1) 元件库 ELEMENT_LIBRARY（JSON 数组）：
+{ELEMENT_LIBRARY_JSON}
+
+(2) Protocol（自然语言）：
+{PROTOCOL_TEXT}
+
+输出目标：
+生成一个 JSON 对象，且只允许包含以下三个键：
+{
+  "instance": [...],
+  "netlist": [...],
+  "plan": [...]
+}
+
+字段规范（必须严格遵守，且对象尽量扁平）：
+
+A) instance（器件实例表，数组；每个元素是一个实例对象）
+每个实例对象必须包含这些键：
+- inst_id：字符串，形如 "U001"（必须唯一）
+- lib_id：字符串，必须来自元件库中的 id（例如 P1/M4/I5 等）
+- role：字符串，用于描述该实例在 protocol 中的语义角色（例如 source_LysisBuffer、merge、mix、waste_outlet 等）
+- phase：字符串，表示“protocol 的大过程阶段”（macro-stage），推荐枚举：
+  sample_prep, lysis, bind_capture, wash, elute, amplify, detect, output, waste, utility
+- domain：字符串，表示“阶段内的功能域/子域”（within-phase functional area），推荐枚举：
+  meter, merge, mix, route, capture, filter, reaction, interface, waste_unit, utility
+  注意：domain 不要使用 lysis/wash/elute/amplify/detect 等阶段词，阶段词只放在 phase。
+- ports_liquid：字符串，液体端口名列表，用英文逗号分隔；无则空串 ""。
+  端口名只允许：liq_in_#, liq_out_#（例如 "liq_in_1,liq_out_1"）
+- ports_air：字符串，气体端口名列表；无则空串 ""。端口名只允许：air_#
+- ports_act：字符串，机械执行端口名列表；无则空串 ""。端口名只允许：act_#
+- ports_thermal：字符串，热控端口名列表；无则空串 ""。端口名只允许：therm_#
+- ports_magnetic：字符串，磁控端口名列表；无则空串 ""。端口名只允许：mag_#
+- reagent_name：字符串，预装/内部试剂名称；无则空串 ""。
+  多试剂用 "|" 分隔，例如 "Wash1|Wash2|Elution"
+- reagent_volume_uL：字符串或数字。建议使用字符串以兼容多值。
+  单体积例："200"；多体积用 "|" 分隔，必须与 reagent_name 一一对应，例如 "200|200|50"；无预装可用 "0" 或 ""（建议 "0"）
+- reagent_state：字符串，推荐枚举：liquid, dry, beads, air, empty（默认 empty）
+- param_override：字符串，参数覆盖；无则空串 ""；推荐格式 "key=value;key=value"
+
+B) netlist（连接网表，数组；每个元素是一条连接边）
+每条边必须包含这些键：
+- edge_id：字符串，形如 "E001"（必须唯一）
+- from_inst：字符串，必须是 instance 中出现过的 inst_id
+- from_port：字符串，必须是 from_inst 的 ports_* 中声明过的端口名
+- to_inst：字符串，必须是 instance 中出现过的 inst_id
+- to_port：字符串，必须是 to_inst 的 ports_* 中声明过的端口名
+- channel：字符串，只允许：liquid, air, mechanical, thermal, magnetic
+- phase：字符串。通常等于两端实例相同的 phase；如果两端 phase 不同，必须写 "cross_phase"
+- domain：字符串，连接所在功能域（一般与两端实例 domain 相同或兼容）
+
+C) plan（执行计划表，数组；每个元素是一步动作）
+每一步必须包含这些键：
+- step_id：整数，从 1 开始递增（至少要唯一）
+- action：字符串，只允许使用以下词表（不要发散）：
+  press, release, toggle_open, toggle_close, set_position, mix_stir, mix_bubble, magnet_on, magnet_off, set_temp, heat_on, heat_off,
+  wait
+- target_inst：字符串。除 wait 外必须是 instance 中的 inst_id；wait 可为空串 ""
+- target_port：字符串。除 wait 外建议填写对应端口名（例如 act_1、mag_1、therm_1）；wait 可为空串 ""
+- value：字符串。动作参数，推荐格式 "key=value;key=value"；没有则空串 ""
+- duration_s：整数，>=0
+- depends_on：字符串，逗号分隔的 step_id 列表；无依赖则空串 ""
+- phase：字符串。除 wait 外必须等于 target_inst 的 phase；wait 可填 "utility"
+- domain：字符串。一般等于 target_inst 的 domain；wait 可填 "utility"
+
+硬规则（必须满足）：
+1) 只能使用元件库中存在的 lib_id，禁止虚构元件。
+2) inst_id/edge_id 必须唯一。
+3) netlist 和 plan 引用到的端口名，必须在对应实例的 ports_* 字段中声明过。
+4) 液体连接必须是 liq_out_* -> liq_in_*；气体连接必须是 air_* <-> air_*。
+5) phase 与 domain 必须语义分离：phase 表示大过程阶段；domain 表示阶段内功能域。
+6) netlist 的 phase：若两端实例 phase 相同，则 edge.phase 必须等于该 phase；若不同则必须是 "cross_phase"。
+7) plan 的 phase：非 wait 步骤必须等于 target_inst.phase；wait 可用 "utility"。
+8) 若 protocol 中明显需要磁控/热控/混匀，plan 必须包含对应动作（magnet_on/off、set_temp/heat_on/off、mix_*），并指向正确实例。
+
+输出格式要求（非常重要）：
+- 只输出 JSON，不要输出任何解释、注释、markdown、代码块或多余文本。
+- JSON 必须可被程序直接解析。
+```
+
+------
+
+### 6.2 第二段：自检 + 修复（只输出修复后 JSON）
+
+把第一段生成结果（原样）塞进 `{CANDIDATE_JSON}`：
+
+```text
+你是一个“结构化图验证与修复器”。你将收到元件库与候选输出（instance/netlist/plan）。你的任务是：严格按照规则检查候选输出，发现任何错误就用最小改动修复，并输出修复后的 JSON。不要输出解释。
+
+输入：
+(1) 元件库 ELEMENT_LIBRARY（JSON 数组）：
+{ELEMENT_LIBRARY_JSON}
+
+(2) 候选输出 CANDIDATE（JSON 对象，包含 instance/netlist/plan）：
+{CANDIDATE_JSON}
+
+你必须执行的验证与修复规则（全部为硬规则）：
+
+A. 基础一致性
+1) instance 中每个 inst_id 必须唯一，且非空。
+2) 每个 instance.lib_id 必须存在于元件库 id 列表中。
+3) netlist 中每个 edge_id 必须唯一，且非空。
+4) plan 中每个 step_id 必须唯一（建议从 1 递增，若不递增也必须唯一）。
+
+B. phase 与 domain 语义约束
+5) 每个 instance 必须有 phase 与 domain，且非空。
+6) phase 必须用于表示 protocol 大过程阶段，推荐集合：
+   sample_prep, lysis, bind_capture, wash, elute, amplify, detect, output, waste, utility
+   若出现其他 phase，允许保留但必须满足“小写+下划线”的命名规则。
+7) domain 必须用于表示阶段内功能域，推荐集合：
+   meter, merge, mix, route, capture, filter, reaction, interface, waste_unit, utility
+   修复要求：若 domain 使用了阶段词（lysis/wash/elute/amplify/detect/output 等），必须改写为功能域形式（例如 reaction/mix/merge/wash_unit 等），并把阶段词放回 phase。
+
+C. 端口存在性与合法性
+8) 对于每个 netlist 边：
+   - from_inst 与 to_inst 必须存在于 instance 表。
+   - from_port 必须出现在 from_inst 的 ports_liquid/ports_air/ports_act/ports_thermal/ports_magnetic 之一中。
+   - to_port 必须出现在 to_inst 的 ports_* 之一中。
+9) 对于每个 plan 步骤（非 wait）：
+   - target_inst 必须存在于 instance 表。
+   - target_port 必须存在于 target_inst 的 ports_* 中（若为空则必须修复为正确端口，或把动作改为不需要端口的形式）。
+10) 端口命名约定：
+   - 液体端口：liq_in_#, liq_out_#
+   - 气体端口：air_#
+   - 执行端口：act_#
+   - 热控端口：therm_#
+   - 磁控端口：mag_#
+   若出现不符合命名的端口，必须统一改为上述命名，并同步修复所有引用。
+
+D. 连接通道合法性
+11) 若 netlist.channel="liquid"，则必须满足：from_port 以 "liq_out_" 开头，to_port 以 "liq_in_" 开头；否则修复边的方向或端口引用。
+12) 若 netlist.channel="air"，则两端端口都必须以 "air_" 开头；否则修复。
+13) 若 netlist.channel="mechanical"，则 to_port 必须以 "act_" 开头；否则修复。
+14) 若 netlist.channel="thermal"，则 to_port 必须以 "therm_" 开头；否则修复。
+15) 若 netlist.channel="magnetic"，则 to_port 必须以 "mag_" 开头；否则修复。
+
+E. phase 一致性（instance/netlist/plan）
+16) 对于每条 netlist 边：
+   - 若 from_inst.phase == to_inst.phase，则 edge.phase 必须等于该 phase；否则修复 edge.phase。
+   - 若 from_inst.phase != to_inst.phase，则 edge.phase 必须为 "cross_phase"；否则修复。
+17) 对于 plan：
+   - 非 wait 步骤：step.phase 必须等于 target_inst.phase；否则修复。
+   - wait 步骤：step.phase 必须存在；若为空则设为 "utility"。
+
+F. 完整性（避免只连不跑）
+18) 每个需要机械执行的实例（即 ports_act 非空的实例），plan 中至少有一步 action 属于 press/release/toggle_open/toggle_close/set_position 且 target_inst 指向该实例。
+   若缺失，必须补充最少的步骤（通常补 press）。
+19) 若存在 mix 功能模块实例（domain=mix 或 role 含 mix），plan 必须包含至少一个 mix_stir 或 mix_bubble 且指向该实例（或其外设端口）。
+20) 若存在磁珠/磁控相关实例（role 含 capture 或 reagent_state=beads 或 ports_magnetic 非空），plan 必须包含 magnet_on 与 magnet_off（可在同一 phase 内），否则补齐。
+21) 若存在热控相关实例（ports_thermal 非空 或 role 含 heat/amplify/reaction 且 protocol 暗示温控），plan 必须包含 set_temp 与 heat_on/heat_off（或最小 set_temp+wait），否则补齐。
+
+输出要求：
+- 只输出修复后的 JSON（包含 instance/netlist/plan 三个键），不要输出任何解释、注释、markdown 或多余文本。
+- 修复遵循“最小改动”原则：优先修字段、修引用、补缺失步骤；只有在无法修复时才删除明显无用/孤立的对象。
+```
+
+------
+
+## 七、Verifier 规则清单
+
+### 7.1 ID 与引用一致性
+
+- [R001] `inst_id` 全唯一
+- [R002] `lib_id` 必须存在于元件库
+- [R003] `edge_id` 全唯一
+- [R004] `step_id` 从 1 递增或至少唯一
+- [R005] instance / netlist / plan 中凡出现 `phase` 字段：必须非空字符串（wait 也必须有 phase，推荐填 `utility`）
+
+### 7.2 端口声明一致性
+
+- [R101] 对每个 instance：
+  - `ports_liquid / ports_air / ports_act / ports_thermal / ports_magnetic` 必须是字符串；允许空串 `""`
+  - 每个字段内部端口名按逗号分割后 **不得重复**（去空格后比较）
+- [R102] 端口命名必须与类型一致：
+  - `ports_liquid` 内只能出现 `liq_in_*` 或 `liq_out_*`
+  - `ports_air` 内只能出现 `air_*`
+  - `ports_act` 内只能出现 `act_*`
+  - `ports_thermal` 内只能出现 `therm_*`
+  - `ports_magnetic` 内只能出现 `mag_*`
+- [R103] 同理检查 `air/act/thermal/magnetic`
+- [R104] netlist 的 `from_port/to_port` 必须在对应 instance 的端口名列表中（对应的 `ports_*` 字段）
+- [R105] plan 的 `target_port` 必须在对应 instance 的端口名列表中（对应的 `ports_*` 字段）
+- ******[R106]** plan 中非 `wait` 步骤：`target_inst` 必须存在且非空；`wait` 允许 `target_inst=""` 且 `target_port=""`
+
+### 7.3 连接类型合法性
+
+- [R201] `channel=liquid` 时：`from_port` 必须是 `liq_out_*`，`to_port` 必须是 `liq_in_*`
+- [R202] `channel=air` 时：两端必须是 `air_*`
+- [R203] `channel=mechanical` 时：to_port 必须是 `act_*`
+- [R204] `channel=thermal` 时：to_port 必须是 `therm_*`
+- [R205] `channel=magnetic` 时：to_port 必须是 `mag_*`
+- [R206] netlist 的 `phase` 一致性：
+  - 若 `from_inst.phase == to_inst.phase`，则 `edge.phase` 必须等于该 phase
+  - 若不同，则 `edge.phase` 必须为 `"cross_phase"`（或你定义的跨阶段标记）
+
+### 7.4 结构连通性
+
+- [R301] 除了纯接口件（inlet/outlet/sub-ports/push-rod），每个实例至少有 1 条入边或出边
+- [R302] 每个“源”（role 含 source / OUT / Sequential OUT）应能通过 liquid edges 到达某个 sink（reaction/output/waste）
+- [R303] phase 内连通性：对每个 phase（除 `utility`）：
+  - 至少存在一条液体路径把该 phase 的源（source/OUT/Sequential OUT）连接到同 phase 的处理/汇（merge/mix/reaction/output/waste）
+  - 若出现 `edge.phase="cross_phase"`，则必须确保跨 phase 的两侧各自仍满足本 phase 的最小连通（避免跨阶段跳线导致阶段内部断裂）
+
+### 7.5 执行计划覆盖
+
+- [R401] 如果存在 `requires_external_magnet=yes` → plan 必须包含 `magnet_on` 与 `magnet_off`
+- [R402] 如果存在 `requires_external_heating=yes` → plan 必须包含 `set_temp` 或 `heat_on`，以及 `heat_off`
+- [R403] 对所有 `requires_external_actuator=yes` 且 ports_act>0 的实例，plan 至少出现一次 `press/toggle/set_position` 指向它
+- [R404] 若出现 mixing 模块：`mix_stir` 或 `mix_bubble` 必须出现一次
+- [R405] plan 的 `phase` 对齐：
+  - 非 `wait`：`step.phase == target_inst.phase`
+  - `wait`：`step.phase` 必须存在，推荐 `"utility"`（或等于上一步 phase，但要一致化）
+- [R406] 若某 phase 中存在需要外设的实例（magnet/heating/actuation），则该 phase 内应出现对应动作步骤（避免把所有 magnet_on 放到别的 phase）
+
+### 7.6 气体管理/瞬态风险
+
+- [R501] ：上述“同域或上游”应限定为：
+  - **同 phase** 的 `domain` 内，或
+  - 同 phase 的上游路径（沿 liquid edges 追溯到最近 OUT/Sequential OUT）所覆盖的节点集合中
+    （避免把 vent 放到别的 phase 但实际无助于该阶段的困气）
+- [R502] 若 plan 中有 bubble mixing（M7），则后续若接 metering（M2/M3）建议插入 `wait` 或 `vent` 步骤以消泡（可作为软规则）
+- [R503] 若 `edge.phase="cross_phase"` 且跨越到更精密计量阶段（含 M2/M3），建议在跨 phase 连接之后插入 `wait` 或 `air_vent` 相关动作/停留，以降低气泡携带风险
