@@ -1,0 +1,80 @@
+[
+  {
+    "id": "basic_0",
+    "description": "Create cube",
+    "code": "import bpy\n\n# Delete all objects in the scene\nbpy.ops.object.select_all(action='SELECT')\nbpy.ops.object.delete(use_global=False)\n\n# Create cube\nbpy.ops.mesh.primitive_cube_add(size=2, location=(0, 0, 0))\ncube = bpy.context.active_object\n\n# Add material\nmat = bpy.data.materials.new(name=\"CubeMaterial\")\nmat.use_nodes = True\nbsdf = mat.node_tree.nodes[\"Principled BSDF\"]\nbsdf.inputs[0].default_value = (0.8, 0.2, 0.2, 1)  # Red color\ncube.data.materials.append(mat)\n",
+    "category": "basic"
+  },
+  {
+    "id": "basic_1",
+    "description": "Create sphere",
+    "code": "import bpy\n\n# Delete all objects in the scene\nbpy.ops.object.select_all(action='SELECT')\nbpy.ops.object.delete(use_global=False)\n\n# Create sphere\nbpy.ops.mesh.primitive_uv_sphere_add(radius=1, location=(0, 0, 0))\nsphere = bpy.context.active_object\n\n# Add material\nmat = bpy.data.materials.new(name=\"SphereMaterial\")\nmat.use_nodes = True\nbsdf = mat.node_tree.nodes[\"Principled BSDF\"]\nbsdf.inputs[0].default_value = (0.2, 0.8, 0.2, 1)  # Green color\nsphere.data.materials.append(mat)\n",
+    "category": "basic"
+  },
+  {
+    "id": "basic_2",
+    "description": "Create cylinder",
+    "code": "import bpy\n\n# Delete all objects in the scene\nbpy.ops.object.select_all(action='SELECT')\nbpy.ops.object.delete(use_global=False)\n\n# Create cylinder\nbpy.ops.mesh.primitive_cylinder_add(radius=1, depth=2, location=(0, 0, 0))\ncylinder = bpy.context.active_object\n\n# Add material\nmat = bpy.data.materials.new(name=\"CylinderMaterial\")\nmat.use_nodes = True\nbsdf = mat.node_tree.nodes[\"Principled BSDF\"]\nbsdf.inputs[0].default_value = (0.2, 0.2, 0.8, 1)  # Blue color\ncylinder.data.materials.append(mat)\n",
+    "category": "basic"
+  },
+  {
+    "id": "basic_3",
+    "description": "Create torus",
+    "code": "import bpy\n\n# Delete all objects in the scene\nbpy.ops.object.select_all(action='SELECT')\nbpy.ops.object.delete(use_global=False)\n\n# Create torus\nbpy.ops.mesh.primitive_torus_add(major_radius=1, minor_radius=0.3, location=(0, 0, 0))\ntorus = bpy.context.active_object\n\n# Add material\nmat = bpy.data.materials.new(name=\"TorusMaterial\")\nmat.use_nodes = True\nbsdf = mat.node_tree.nodes[\"Principled BSDF\"]\nbsdf.inputs[0].default_value = (0.8, 0.6, 0.2, 1)  # Orange color\ntorus.data.materials.append(mat)\n",
+    "category": "basic"
+  },
+  {
+    "id": "basic_4",
+    "description": "Create plane",
+    "code": "import bpy\n\n# Delete all objects in the scene\nbpy.ops.object.select_all(action='SELECT')\nbpy.ops.object.delete(use_global=False)\n\n# Create plane\nbpy.ops.mesh.primitive_plane_add(size=4, location=(0, 0, 0))\nplane = bpy.context.active_object\n\n# Add material\nmat = bpy.data.materials.new(name=\"PlaneMaterial\")\nmat.use_nodes = True\nbsdf = mat.node_tree.nodes[\"Principled BSDF\"]\nbsdf.inputs[0].default_value = (0.5, 0.5, 0.5, 1)  # Gray color\nplane.data.materials.append(mat)\n",
+    "category": "basic"
+  },
+  {
+    "id": "basic_5",
+    "description": "Create cone",
+    "code": "import bpy\n\n# Delete all objects in the scene\nbpy.ops.object.select_all(action='SELECT')\nbpy.ops.object.delete(use_global=False)\n\n# Create cone\nbpy.ops.mesh.primitive_cone_add(radius1=1, depth=2, location=(0, 0, 0))\ncone = bpy.context.active_object\n\n# Add material\nmat = bpy.data.materials.new(name=\"ConeMaterial\")\nmat.use_nodes = True\nbsdf = mat.node_tree.nodes[\"Principled BSDF\"]\nbsdf.inputs[0].default_value = (0.9, 0.4, 0.1, 1)  # Orange-red color\ncone.data.materials.append(mat)\n",
+    "category": "basic"
+  },
+  {
+    "id": "lighting_6",
+    "description": "Add lighting",
+    "code": "import bpy\n\n# Add point light\nlight_data = bpy.data.lights.new(name=\"PointLight\", type='POINT')\nlight_data.energy = 1000\nlight_object = bpy.data.objects.new(name=\"PointLight\", object_data=light_data)\nbpy.context.collection.objects.link(light_object)\nlight_object.location = (2, 2, 5)\n\n# Add sun light\nsun_data = bpy.data.lights.new(name=\"SunLight\", type='SUN')\nsun_data.energy = 5\nsun_object = bpy.data.objects.new(name=\"SunLight\", object_data=sun_data)\nbpy.context.collection.objects.link(sun_object)\nsun_object.location = (5, 5, 10)\nsun_object.rotation_euler = (0.5, 0, 0.5)\n\n# Add ambient light\nworld = bpy.context.scene.world\nif not world:\n    world = bpy.data.worlds.new(\"World\")\n    bpy.context.scene.world = world\nworld.use_nodes = True\nbg_node = world.node_tree.nodes.get(\"Background\")\nif bg_node:\n    bg_node.inputs[0].default_value = (0.1, 0.1, 0.15, 1)\n",
+    "category": "lighting"
+  },
+  {
+    "id": "camera_7",
+    "description": "Setup camera",
+    "code": "import bpy\n\n# Create camera\ncamera_data = bpy.data.cameras.new(name=\"Camera\")\ncamera_object = bpy.data.objects.new(name=\"Camera\", object_data=camera_data)\nbpy.context.collection.objects.link(camera_object)\n\n# Set camera position and direction\ncamera_object.location = (5, -5, 3)\ncamera_object.rotation_euler = (1.2, 0, 0.8)\n\n# Set as active camera\nbpy.context.scene.camera = camera_object\n\n# Set camera parameters\ncamera_data.lens = 35\ncamera_data.sensor_fit = 'HORIZONTAL'\ncamera_data.sensor_width = 36\ncamera_data.sensor_height = 24\n",
+    "category": "camera"
+  },
+  {
+    "id": "rendering_8",
+    "description": "Set rendering parameters",
+    "code": "import bpy\n\n# Set rendering engine\nbpy.context.scene.render.engine = 'CYCLES'\n\n# Set rendering resolution\nbpy.context.scene.render.resolution_x = 1920\nbpy.context.scene.render.resolution_y = 1080\nbpy.context.scene.render.resolution_percentage = 100\n\n# Set sample count\nbpy.context.scene.cycles.samples = 128\n\n# Set denoising\nbpy.context.scene.cycles.use_denoising = True\n\n# Set output path\nbpy.context.scene.render.filepath = \"/tmp/render.png\"\nbpy.context.scene.render.image_settings.file_format = 'PNG'\n\n# Set transparent background\nbpy.context.scene.render.film_transparent = True\n",
+    "category": "rendering"
+  },
+  {
+    "id": "materials_9",
+    "description": "Create materials and textures",
+    "code": "import bpy\n\n# Create material\nmat = bpy.data.materials.new(name=\"CustomMaterial\")\nmat.use_nodes = True\nnodes = mat.node_tree.nodes\nlinks = mat.node_tree.links\n\n# Get base nodes\nbsdf = nodes.get(\"Principled BSDF\")\noutput = nodes.get(\"Material Output\")\n\n# Create texture node\ntex_node = nodes.new(type='ShaderNodeTexImage')\ntex_node.location = (-300, 0)\n\n# Create noise texture\nnoise_node = nodes.new(type='ShaderNodeTexNoise')\nnoise_node.location = (-500, 0)\nnoise_node.inputs[\"Scale\"].default_value = 5.0\n\n# Connect nodes\nlinks.new(noise_node.outputs[\"Color\"], tex_node.inputs[\"Vector\"])\nlinks.new(tex_node.outputs[\"Color\"], bsdf.inputs[\"Base Color\"])\n\n# Assign material to object\nobj = bpy.context.active_object\nif obj:\n    if obj.data.materials:\n        obj.data.materials[0] = mat\n    else:\n        obj.data.materials.append(mat)\n",
+    "category": "materials"
+  },
+  {
+    "id": "animation_10",
+    "description": "Create animation keyframes",
+    "code": "import bpy\n\n# Select active object\nobj = bpy.context.active_object\nif not obj:\n    print(\"Please select an object first\")\n    exit()\n\n# Set position at frame 1\nbpy.context.scene.frame_set(1)\nobj.location = (0, 0, 0)\nobj.keyframe_insert(data_path=\"location\")\n\n# Move to new position at frame 50\nbpy.context.scene.frame_set(50)\nobj.location = (5, 0, 0)\nobj.keyframe_insert(data_path=\"location\")\n\n# Move to another position at frame 100\nbpy.context.scene.frame_set(100)\nobj.location = (10, 5, 2)\nobj.keyframe_insert(data_path=\"location\")\n\n# Add rotation animation\nbpy.context.scene.frame_set(1)\nobj.rotation_euler = (0, 0, 0)\nobj.keyframe_insert(data_path=\"rotation_euler\")\n\nbpy.context.scene.frame_set(100)\nobj.rotation_euler = (0, 0, 6.28)  # 360 degree rotation\nobj.keyframe_insert(data_path=\"rotation_euler\")\n\nprint(\"Animation keyframes created\")\n",
+    "category": "animation"
+  },
+  {
+    "id": "particles_11",
+    "description": "Create particle system",
+    "code": "import bpy\n\n# Select active object\nobj = bpy.context.active_object\nif not obj:\n    print(\"Please select an object first\")\n    exit()\n\n# Add particle system\nparticle_system = obj.modifiers.new(name=\"ParticleSystem\", type='PARTICLE_SYSTEM')\npsys = obj.particle_systems.active\n\n# Set particle system properties\npsys.settings.count = 1000  # Particle count\npsys.settings.frame_start = 1  # Start frame\npsys.settings.frame_end = 100  # End frame\npsys.settings.lifetime = 50  # Particle lifetime\npsys.settings.emit_from = 'VOLUME'  # Emit from volume\npsys.settings.use_emit_random = True  # Random emission\n\n# Set particle physics\npsys.settings.physics_type = 'NEWTON'\npsys.settings.normal_factor = 1.0\npsys.settings.tangent_factor = 0.5\npsys.settings.factor_random = 0.5\n\n# Set particle size\npsys.settings.particle_size = 0.1\npsys.settings.size_random = 0.5\n\nprint(\"Particle system created\")\n",
+    "category": "particles"
+  },
+  {
+    "id": "rigging_12",
+    "description": "Create rigging",
+    "code": "import bpy\n\n# Select active object\nobj = bpy.context.active_object\nif not obj:\n    print(\"Please select an object first\")\n    exit()\n\n# Create armature\narmature_data = bpy.data.armatures.new(name=\"Armature\")\narmature_obj = bpy.data.objects.new(name=\"Armature\", object_data=armature_data)\nbpy.context.collection.objects.link(armature_obj)\nbpy.context.view_layer.objects.active = armature_obj\nbpy.ops.object.mode_set(mode='EDIT')\n\n# Add bone\nbone = armature_data.edit_bones.new(\"Bone\")\nbone.head = (0, 0, 0)\nbone.tail = (0, 0, 2)\n\n# Switch back to object mode\nbpy.ops.object.mode_set(mode='OBJECT')\n\n# Add armature modifier to object\nmod = obj.modifiers.new(name=\"Armature\", type='ARMATURE')\nmod.object = armature_obj\n\n# Set parent object\nobj.parent = armature_obj\n\nprint(\"Rigging created\")\n",
+    "category": "rigging"
+  }
+]
