@@ -1,0 +1,1054 @@
+{
+  "create": [
+    "basic_0",
+    "basic_1",
+    "basic_2",
+    "basic_3",
+    "basic_4",
+    "basic_5",
+    "camera_7",
+    "materials_9",
+    "animation_10",
+    "particles_11",
+    "rigging_12"
+  ],
+  "cube": [
+    "basic_0"
+  ],
+  "import": [
+    "basic_0",
+    "basic_1",
+    "basic_2",
+    "basic_3",
+    "basic_4",
+    "basic_5",
+    "lighting_6",
+    "camera_7",
+    "rendering_8",
+    "materials_9",
+    "animation_10",
+    "particles_11",
+    "rigging_12"
+  ],
+  "bpy": [
+    "basic_0",
+    "basic_1",
+    "basic_2",
+    "basic_3",
+    "basic_4",
+    "basic_5",
+    "lighting_6",
+    "camera_7",
+    "rendering_8",
+    "materials_9",
+    "animation_10",
+    "particles_11",
+    "rigging_12"
+  ],
+  "delete": [
+    "basic_0",
+    "basic_1",
+    "basic_2",
+    "basic_3",
+    "basic_4",
+    "basic_5"
+  ],
+  "all": [
+    "basic_0",
+    "basic_1",
+    "basic_2",
+    "basic_3",
+    "basic_4",
+    "basic_5"
+  ],
+  "objects": [
+    "basic_0",
+    "basic_1",
+    "basic_2",
+    "basic_3",
+    "basic_4",
+    "basic_5"
+  ],
+  "the": [
+    "basic_0",
+    "basic_1",
+    "basic_2",
+    "basic_3",
+    "basic_4",
+    "basic_5"
+  ],
+  "scene": [
+    "basic_0",
+    "basic_1",
+    "basic_2",
+    "basic_3",
+    "basic_4",
+    "basic_5"
+  ],
+  "bpy.ops.object.select_all(action='select')": [
+    "basic_0",
+    "basic_1",
+    "basic_2",
+    "basic_3",
+    "basic_4",
+    "basic_5"
+  ],
+  "bpy.ops.object.delete(use_global=false)": [
+    "basic_0",
+    "basic_1",
+    "basic_2",
+    "basic_3",
+    "basic_4",
+    "basic_5"
+  ],
+  "bpy.ops.mesh.primitive_cube_add(size=2,": [
+    "basic_0"
+  ],
+  "location=(0,": [
+    "basic_0",
+    "basic_1",
+    "basic_2",
+    "basic_3",
+    "basic_4",
+    "basic_5"
+  ],
+  "0))": [
+    "basic_0",
+    "basic_1",
+    "basic_2",
+    "basic_3",
+    "basic_4",
+    "basic_5"
+  ],
+  "bpy.context.active_object": [
+    "basic_0",
+    "basic_1",
+    "basic_2",
+    "basic_3",
+    "basic_4",
+    "basic_5",
+    "materials_9",
+    "animation_10",
+    "particles_11",
+    "rigging_12"
+  ],
+  "add": [
+    "basic_0",
+    "basic_1",
+    "basic_2",
+    "basic_3",
+    "basic_4",
+    "basic_5",
+    "lighting_6",
+    "animation_10",
+    "particles_11",
+    "rigging_12"
+  ],
+  "material": [
+    "basic_0",
+    "basic_1",
+    "basic_2",
+    "basic_3",
+    "basic_4",
+    "basic_5",
+    "materials_9"
+  ],
+  "mat": [
+    "basic_0",
+    "basic_1",
+    "basic_2",
+    "basic_3",
+    "basic_4",
+    "basic_5",
+    "materials_9"
+  ],
+  "bpy.data.materials.new(name=\"cubematerial\")": [
+    "basic_0"
+  ],
+  "mat.use_nodes": [
+    "basic_0",
+    "basic_1",
+    "basic_2",
+    "basic_3",
+    "basic_4",
+    "basic_5",
+    "materials_9"
+  ],
+  "true": [
+    "basic_0",
+    "basic_1",
+    "basic_2",
+    "basic_3",
+    "basic_4",
+    "basic_5",
+    "lighting_6",
+    "rendering_8",
+    "materials_9",
+    "particles_11"
+  ],
+  "bsdf": [
+    "basic_0",
+    "basic_1",
+    "basic_2",
+    "basic_3",
+    "basic_4",
+    "basic_5",
+    "materials_9"
+  ],
+  "mat.node_tree.nodes[\"principled": [
+    "basic_0",
+    "basic_1",
+    "basic_2",
+    "basic_3",
+    "basic_4",
+    "basic_5"
+  ],
+  "bsdf\"]": [
+    "basic_0",
+    "basic_1",
+    "basic_2",
+    "basic_3",
+    "basic_4",
+    "basic_5"
+  ],
+  "bsdf.inputs[0].default_value": [
+    "basic_0",
+    "basic_1",
+    "basic_2",
+    "basic_3",
+    "basic_4",
+    "basic_5"
+  ],
+  "(0.8,": [
+    "basic_0",
+    "basic_3"
+  ],
+  "0.2,": [
+    "basic_0",
+    "basic_1",
+    "basic_2",
+    "basic_3"
+  ],
+  "red": [
+    "basic_0"
+  ],
+  "color": [
+    "basic_0",
+    "basic_1",
+    "basic_2",
+    "basic_3",
+    "basic_4",
+    "basic_5"
+  ],
+  "cube.data.materials.append(mat)": [
+    "basic_0"
+  ],
+  "sphere": [
+    "basic_1"
+  ],
+  "bpy.ops.mesh.primitive_uv_sphere_add(radius=1,": [
+    "basic_1"
+  ],
+  "bpy.data.materials.new(name=\"spherematerial\")": [
+    "basic_1"
+  ],
+  "(0.2,": [
+    "basic_1",
+    "basic_2"
+  ],
+  "0.8,": [
+    "basic_1",
+    "basic_2"
+  ],
+  "green": [
+    "basic_1"
+  ],
+  "sphere.data.materials.append(mat)": [
+    "basic_1"
+  ],
+  "cylinder": [
+    "basic_2"
+  ],
+  "bpy.ops.mesh.primitive_cylinder_add(radius=1,": [
+    "basic_2"
+  ],
+  "depth=2,": [
+    "basic_2",
+    "basic_5"
+  ],
+  "bpy.data.materials.new(name=\"cylindermaterial\")": [
+    "basic_2"
+  ],
+  "blue": [
+    "basic_2"
+  ],
+  "cylinder.data.materials.append(mat)": [
+    "basic_2"
+  ],
+  "torus": [
+    "basic_3"
+  ],
+  "bpy.ops.mesh.primitive_torus_add(major_radius=1,": [
+    "basic_3"
+  ],
+  "minor_radius=0.3,": [
+    "basic_3"
+  ],
+  "bpy.data.materials.new(name=\"torusmaterial\")": [
+    "basic_3"
+  ],
+  "0.6,": [
+    "basic_3"
+  ],
+  "orange": [
+    "basic_3"
+  ],
+  "torus.data.materials.append(mat)": [
+    "basic_3"
+  ],
+  "plane": [
+    "basic_4"
+  ],
+  "bpy.ops.mesh.primitive_plane_add(size=4,": [
+    "basic_4"
+  ],
+  "bpy.data.materials.new(name=\"planematerial\")": [
+    "basic_4"
+  ],
+  "(0.5,": [
+    "basic_4",
+    "lighting_6"
+  ],
+  "0.5,": [
+    "basic_4"
+  ],
+  "gray": [
+    "basic_4"
+  ],
+  "plane.data.materials.append(mat)": [
+    "basic_4"
+  ],
+  "cone": [
+    "basic_5"
+  ],
+  "bpy.ops.mesh.primitive_cone_add(radius1=1,": [
+    "basic_5"
+  ],
+  "bpy.data.materials.new(name=\"conematerial\")": [
+    "basic_5"
+  ],
+  "(0.9,": [
+    "basic_5"
+  ],
+  "0.4,": [
+    "basic_5"
+  ],
+  "0.1,": [
+    "basic_5",
+    "lighting_6"
+  ],
+  "orange-red": [
+    "basic_5"
+  ],
+  "cone.data.materials.append(mat)": [
+    "basic_5"
+  ],
+  "lighting": [
+    "lighting_6"
+  ],
+  "point": [
+    "lighting_6"
+  ],
+  "light": [
+    "lighting_6"
+  ],
+  "light_data": [
+    "lighting_6"
+  ],
+  "bpy.data.lights.new(name=\"pointlight\",": [
+    "lighting_6"
+  ],
+  "type='point')": [
+    "lighting_6"
+  ],
+  "light_data.energy": [
+    "lighting_6"
+  ],
+  "1000": [
+    "lighting_6",
+    "particles_11"
+  ],
+  "light_object": [
+    "lighting_6"
+  ],
+  "bpy.data.objects.new(name=\"pointlight\",": [
+    "lighting_6"
+  ],
+  "object_data=light_data)": [
+    "lighting_6"
+  ],
+  "bpy.context.collection.objects.link(light_object)": [
+    "lighting_6"
+  ],
+  "light_object.location": [
+    "lighting_6"
+  ],
+  "(2,": [
+    "lighting_6"
+  ],
+  "sun": [
+    "lighting_6"
+  ],
+  "sun_data": [
+    "lighting_6"
+  ],
+  "bpy.data.lights.new(name=\"sunlight\",": [
+    "lighting_6"
+  ],
+  "type='sun')": [
+    "lighting_6"
+  ],
+  "sun_data.energy": [
+    "lighting_6"
+  ],
+  "sun_object": [
+    "lighting_6"
+  ],
+  "bpy.data.objects.new(name=\"sunlight\",": [
+    "lighting_6"
+  ],
+  "object_data=sun_data)": [
+    "lighting_6"
+  ],
+  "bpy.context.collection.objects.link(sun_object)": [
+    "lighting_6"
+  ],
+  "sun_object.location": [
+    "lighting_6"
+  ],
+  "(5,": [
+    "lighting_6",
+    "camera_7",
+    "animation_10"
+  ],
+  "10)": [
+    "lighting_6"
+  ],
+  "sun_object.rotation_euler": [
+    "lighting_6"
+  ],
+  "0.5)": [
+    "lighting_6"
+  ],
+  "ambient": [
+    "lighting_6"
+  ],
+  "world": [
+    "lighting_6"
+  ],
+  "bpy.context.scene.world": [
+    "lighting_6"
+  ],
+  "not": [
+    "lighting_6",
+    "animation_10",
+    "particles_11",
+    "rigging_12"
+  ],
+  "world:": [
+    "lighting_6"
+  ],
+  "bpy.data.worlds.new(\"world\")": [
+    "lighting_6"
+  ],
+  "world.use_nodes": [
+    "lighting_6"
+  ],
+  "bg_node": [
+    "lighting_6"
+  ],
+  "world.node_tree.nodes.get(\"background\")": [
+    "lighting_6"
+  ],
+  "bg_node:": [
+    "lighting_6"
+  ],
+  "bg_node.inputs[0].default_value": [
+    "lighting_6"
+  ],
+  "(0.1,": [
+    "lighting_6"
+  ],
+  "0.15,": [
+    "lighting_6"
+  ],
+  "setup": [
+    "camera_7"
+  ],
+  "camera": [
+    "camera_7"
+  ],
+  "camera_data": [
+    "camera_7"
+  ],
+  "bpy.data.cameras.new(name=\"camera\")": [
+    "camera_7"
+  ],
+  "camera_object": [
+    "camera_7"
+  ],
+  "bpy.data.objects.new(name=\"camera\",": [
+    "camera_7"
+  ],
+  "object_data=camera_data)": [
+    "camera_7"
+  ],
+  "bpy.context.collection.objects.link(camera_object)": [
+    "camera_7"
+  ],
+  "set": [
+    "camera_7",
+    "rendering_8",
+    "animation_10",
+    "particles_11",
+    "rigging_12"
+  ],
+  "position": [
+    "camera_7",
+    "animation_10"
+  ],
+  "and": [
+    "camera_7",
+    "materials_9"
+  ],
+  "direction": [
+    "camera_7"
+  ],
+  "camera_object.location": [
+    "camera_7"
+  ],
+  "-5,": [
+    "camera_7"
+  ],
+  "camera_object.rotation_euler": [
+    "camera_7"
+  ],
+  "(1.2,": [
+    "camera_7"
+  ],
+  "0.8)": [
+    "camera_7"
+  ],
+  "active": [
+    "camera_7",
+    "animation_10",
+    "particles_11",
+    "rigging_12"
+  ],
+  "bpy.context.scene.camera": [
+    "camera_7"
+  ],
+  "parameters": [
+    "camera_7",
+    "rendering_8"
+  ],
+  "camera_data.lens": [
+    "camera_7"
+  ],
+  "camera_data.sensor_fit": [
+    "camera_7"
+  ],
+  "'horizontal'": [
+    "camera_7"
+  ],
+  "camera_data.sensor_width": [
+    "camera_7"
+  ],
+  "camera_data.sensor_height": [
+    "camera_7"
+  ],
+  "rendering": [
+    "rendering_8"
+  ],
+  "engine": [
+    "rendering_8"
+  ],
+  "bpy.context.scene.render.engine": [
+    "rendering_8"
+  ],
+  "'cycles'": [
+    "rendering_8"
+  ],
+  "resolution": [
+    "rendering_8"
+  ],
+  "bpy.context.scene.render.resolution_x": [
+    "rendering_8"
+  ],
+  "1920": [
+    "rendering_8"
+  ],
+  "bpy.context.scene.render.resolution_y": [
+    "rendering_8"
+  ],
+  "1080": [
+    "rendering_8"
+  ],
+  "bpy.context.scene.render.resolution_percentage": [
+    "rendering_8"
+  ],
+  "100": [
+    "rendering_8",
+    "animation_10",
+    "particles_11"
+  ],
+  "sample": [
+    "rendering_8"
+  ],
+  "count": [
+    "rendering_8",
+    "particles_11"
+  ],
+  "bpy.context.scene.cycles.samples": [
+    "rendering_8"
+  ],
+  "128": [
+    "rendering_8"
+  ],
+  "denoising": [
+    "rendering_8"
+  ],
+  "bpy.context.scene.cycles.use_denoising": [
+    "rendering_8"
+  ],
+  "output": [
+    "rendering_8",
+    "materials_9"
+  ],
+  "path": [
+    "rendering_8"
+  ],
+  "bpy.context.scene.render.filepath": [
+    "rendering_8"
+  ],
+  "\"/tmp/render.png\"": [
+    "rendering_8"
+  ],
+  "bpy.context.scene.render.image_settings.file_format": [
+    "rendering_8"
+  ],
+  "'png'": [
+    "rendering_8"
+  ],
+  "transparent": [
+    "rendering_8"
+  ],
+  "background": [
+    "rendering_8"
+  ],
+  "bpy.context.scene.render.film_transparent": [
+    "rendering_8"
+  ],
+  "materials": [
+    "materials_9"
+  ],
+  "textures": [
+    "materials_9"
+  ],
+  "bpy.data.materials.new(name=\"custommaterial\")": [
+    "materials_9"
+  ],
+  "nodes": [
+    "materials_9"
+  ],
+  "mat.node_tree.nodes": [
+    "materials_9"
+  ],
+  "links": [
+    "materials_9"
+  ],
+  "mat.node_tree.links": [
+    "materials_9"
+  ],
+  "get": [
+    "materials_9"
+  ],
+  "base": [
+    "materials_9"
+  ],
+  "nodes.get(\"principled": [
+    "materials_9"
+  ],
+  "bsdf\")": [
+    "materials_9"
+  ],
+  "nodes.get(\"material": [
+    "materials_9"
+  ],
+  "output\")": [
+    "materials_9"
+  ],
+  "texture": [
+    "materials_9"
+  ],
+  "node": [
+    "materials_9"
+  ],
+  "tex_node": [
+    "materials_9"
+  ],
+  "nodes.new(type='shadernodeteximage')": [
+    "materials_9"
+  ],
+  "tex_node.location": [
+    "materials_9"
+  ],
+  "(-300,": [
+    "materials_9"
+  ],
+  "noise": [
+    "materials_9"
+  ],
+  "noise_node": [
+    "materials_9"
+  ],
+  "nodes.new(type='shadernodetexnoise')": [
+    "materials_9"
+  ],
+  "noise_node.location": [
+    "materials_9"
+  ],
+  "(-500,": [
+    "materials_9"
+  ],
+  "noise_node.inputs[\"scale\"].default_value": [
+    "materials_9"
+  ],
+  "5.0": [
+    "materials_9"
+  ],
+  "connect": [
+    "materials_9"
+  ],
+  "links.new(noise_node.outputs[\"color\"],": [
+    "materials_9"
+  ],
+  "tex_node.inputs[\"vector\"])": [
+    "materials_9"
+  ],
+  "links.new(tex_node.outputs[\"color\"],": [
+    "materials_9"
+  ],
+  "bsdf.inputs[\"base": [
+    "materials_9"
+  ],
+  "color\"])": [
+    "materials_9"
+  ],
+  "assign": [
+    "materials_9"
+  ],
+  "object": [
+    "materials_9",
+    "animation_10",
+    "particles_11",
+    "rigging_12"
+  ],
+  "obj": [
+    "materials_9",
+    "animation_10",
+    "particles_11",
+    "rigging_12"
+  ],
+  "obj:": [
+    "materials_9",
+    "animation_10",
+    "particles_11",
+    "rigging_12"
+  ],
+  "obj.data.materials:": [
+    "materials_9"
+  ],
+  "obj.data.materials[0]": [
+    "materials_9"
+  ],
+  "else:": [
+    "materials_9"
+  ],
+  "obj.data.materials.append(mat)": [
+    "materials_9"
+  ],
+  "animation": [
+    "animation_10"
+  ],
+  "keyframes": [
+    "animation_10"
+  ],
+  "select": [
+    "animation_10",
+    "particles_11",
+    "rigging_12"
+  ],
+  "print(\"please": [
+    "animation_10",
+    "particles_11",
+    "rigging_12"
+  ],
+  "first\")": [
+    "animation_10",
+    "particles_11",
+    "rigging_12"
+  ],
+  "exit()": [
+    "animation_10",
+    "particles_11",
+    "rigging_12"
+  ],
+  "frame": [
+    "animation_10",
+    "particles_11"
+  ],
+  "bpy.context.scene.frame_set(1)": [
+    "animation_10"
+  ],
+  "obj.location": [
+    "animation_10"
+  ],
+  "(0,": [
+    "animation_10",
+    "rigging_12"
+  ],
+  "obj.keyframe_insert(data_path=\"location\")": [
+    "animation_10"
+  ],
+  "move": [
+    "animation_10"
+  ],
+  "new": [
+    "animation_10"
+  ],
+  "bpy.context.scene.frame_set(50)": [
+    "animation_10"
+  ],
+  "another": [
+    "animation_10"
+  ],
+  "bpy.context.scene.frame_set(100)": [
+    "animation_10"
+  ],
+  "(10,": [
+    "animation_10"
+  ],
+  "rotation": [
+    "animation_10"
+  ],
+  "obj.rotation_euler": [
+    "animation_10"
+  ],
+  "obj.keyframe_insert(data_path=\"rotation_euler\")": [
+    "animation_10"
+  ],
+  "6.28)": [
+    "animation_10"
+  ],
+  "360": [
+    "animation_10"
+  ],
+  "degree": [
+    "animation_10"
+  ],
+  "print(\"animation": [
+    "animation_10"
+  ],
+  "created\")": [
+    "animation_10",
+    "particles_11",
+    "rigging_12"
+  ],
+  "particle": [
+    "particles_11"
+  ],
+  "system": [
+    "particles_11"
+  ],
+  "particle_system": [
+    "particles_11"
+  ],
+  "obj.modifiers.new(name=\"particlesystem\",": [
+    "particles_11"
+  ],
+  "type='particle_system')": [
+    "particles_11"
+  ],
+  "psys": [
+    "particles_11"
+  ],
+  "obj.particle_systems.active": [
+    "particles_11"
+  ],
+  "properties": [
+    "particles_11"
+  ],
+  "psys.settings.count": [
+    "particles_11"
+  ],
+  "psys.settings.frame_start": [
+    "particles_11"
+  ],
+  "start": [
+    "particles_11"
+  ],
+  "psys.settings.frame_end": [
+    "particles_11"
+  ],
+  "end": [
+    "particles_11"
+  ],
+  "psys.settings.lifetime": [
+    "particles_11"
+  ],
+  "lifetime": [
+    "particles_11"
+  ],
+  "psys.settings.emit_from": [
+    "particles_11"
+  ],
+  "'volume'": [
+    "particles_11"
+  ],
+  "emit": [
+    "particles_11"
+  ],
+  "from": [
+    "particles_11"
+  ],
+  "volume": [
+    "particles_11"
+  ],
+  "psys.settings.use_emit_random": [
+    "particles_11"
+  ],
+  "random": [
+    "particles_11"
+  ],
+  "emission": [
+    "particles_11"
+  ],
+  "physics": [
+    "particles_11"
+  ],
+  "psys.settings.physics_type": [
+    "particles_11"
+  ],
+  "'newton'": [
+    "particles_11"
+  ],
+  "psys.settings.normal_factor": [
+    "particles_11"
+  ],
+  "1.0": [
+    "particles_11"
+  ],
+  "psys.settings.tangent_factor": [
+    "particles_11"
+  ],
+  "0.5": [
+    "particles_11"
+  ],
+  "psys.settings.factor_random": [
+    "particles_11"
+  ],
+  "size": [
+    "particles_11"
+  ],
+  "psys.settings.particle_size": [
+    "particles_11"
+  ],
+  "0.1": [
+    "particles_11"
+  ],
+  "psys.settings.size_random": [
+    "particles_11"
+  ],
+  "print(\"particle": [
+    "particles_11"
+  ],
+  "rigging": [
+    "rigging_12"
+  ],
+  "armature": [
+    "rigging_12"
+  ],
+  "armature_data": [
+    "rigging_12"
+  ],
+  "bpy.data.armatures.new(name=\"armature\")": [
+    "rigging_12"
+  ],
+  "armature_obj": [
+    "rigging_12"
+  ],
+  "bpy.data.objects.new(name=\"armature\",": [
+    "rigging_12"
+  ],
+  "object_data=armature_data)": [
+    "rigging_12"
+  ],
+  "bpy.context.collection.objects.link(armature_obj)": [
+    "rigging_12"
+  ],
+  "bpy.context.view_layer.objects.active": [
+    "rigging_12"
+  ],
+  "bpy.ops.object.mode_set(mode='edit')": [
+    "rigging_12"
+  ],
+  "bone": [
+    "rigging_12"
+  ],
+  "armature_data.edit_bones.new(\"bone\")": [
+    "rigging_12"
+  ],
+  "bone.head": [
+    "rigging_12"
+  ],
+  "bone.tail": [
+    "rigging_12"
+  ],
+  "switch": [
+    "rigging_12"
+  ],
+  "back": [
+    "rigging_12"
+  ],
+  "mode": [
+    "rigging_12"
+  ],
+  "bpy.ops.object.mode_set(mode='object')": [
+    "rigging_12"
+  ],
+  "modifier": [
+    "rigging_12"
+  ],
+  "mod": [
+    "rigging_12"
+  ],
+  "obj.modifiers.new(name=\"armature\",": [
+    "rigging_12"
+  ],
+  "type='armature')": [
+    "rigging_12"
+  ],
+  "mod.object": [
+    "rigging_12"
+  ],
+  "parent": [
+    "rigging_12"
+  ],
+  "obj.parent": [
+    "rigging_12"
+  ],
+  "print(\"rigging": [
+    "rigging_12"
+  ]
+}
