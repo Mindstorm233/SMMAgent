@@ -294,7 +294,7 @@ def main():
     
     # Initialize advanced generator
     generator = AdvancedBlenderGenerator(
-        api_key="sk-NUjRMAIYYqteKsWh85055eE008Ef4b848e8360Bd34C77f19",
+        api_key="",
         base_url="https://api.gpt.ge/v1/",
         rag_db_path="./rag"
     )
