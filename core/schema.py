@@ -2,19 +2,19 @@
 ## 1. core/schema.py
 
 """
-数据结构定义模块
-定义生物芯片设计的所有数据模型
+Data structure definition module.
+Defines all data models for biochip design.
 """
 from pydantic import BaseModel, Field
 
 
 class ComponentInstance(BaseModel):
-    """元件实例"""
-    inst_id: str = Field(description="格式：U+3~6位数字")
-    lib_id: str = Field(description="来自元件库的id")
-    role: str = Field(description="角色")
-    domain: str = Field(description="功能域")
-    phase: str = Field(description="阶段")
+    """Component instance."""
+    inst_id: str = Field(description="Format: U + 3~6 digits")
+    lib_id: str = Field(description="ID from component library")
+    role: str = Field(description="Role")
+    domain: str = Field(description="Functional domain")
+    phase: str = Field(description="Phase")
     ports_liquid: str = Field(default="")
     ports_air: str = Field(default="")
     ports_act: str = Field(default="")
@@ -27,33 +27,33 @@ class ComponentInstance(BaseModel):
 
 
 class Connection(BaseModel):
-    """连接关系"""
-    edge_id: str = Field(description="格式：E+3~6位数字")
-    from_inst: str = Field(description="源ID")
-    from_port: str = Field(description="源端口")
-    to_inst: str = Field(description="目标ID")
-    to_port: str = Field(description="目标端口")
-    channel: str = Field(description="通道类型")
-    domain: str = Field(description="连接域")
-    phase: str = Field(description="连接阶段")
+    """Connection relationship."""
+    edge_id: str = Field(description="Format: E + 3~6 digits")
+    from_inst: str = Field(description="Source ID")
+    from_port: str = Field(description="Source port")
+    to_inst: str = Field(description="Target ID")
+    to_port: str = Field(description="Target port")
+    channel: str = Field(description="Channel type")
+    domain: str = Field(description="Connection domain")
+    phase: str = Field(description="Connection phase")
 
 
 class OperationStep(BaseModel):
-    """操作步骤"""
-    step_id: int = Field(description="步骤ID")
-    action: str = Field(description="动作类型")
-    target_inst: str = Field(description="目标ID")
+    """Operation step."""
+    step_id: int = Field(description="Step ID")
+    action: str = Field(description="Action type")
+    target_inst: str = Field(description="Target ID")
     target_port: str = Field(default="")
     value: str = Field(default="")
-    duration_s: int = Field(description="持续时间")
+    duration_s: int = Field(description="Duration")
     depends_on: str = Field(default="")
-    domain: str = Field(description="操作域")
-    phase: str = Field(description="操作阶段")
+    domain: str = Field(description="Operation domain")
+    phase: str = Field(description="Operation phase")
 
 
 class BioChipDesign(BaseModel):
-    """生物芯片完整设计"""
-    reasoning: str = Field(description="设计/审查的思路说明")
+    """Complete biochip design."""
+    reasoning: str = Field(description="Design/review reasoning notes")
     instances: list[ComponentInstance]
     connections: list[Connection]
     plan: list[OperationStep]

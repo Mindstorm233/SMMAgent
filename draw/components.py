@@ -12,7 +12,7 @@ class MeterM(elm.Element2Term):
         self.segments.append(SegmentText((0.5, 0), 'M'))
 
 def standardize_interface(el):
-    """确保元件拥有 end (输出) 和 start (默认输入) 锚点"""
+    """Ensure the element has `end` (output) and `start` (default input) anchors."""
     anchors = el.anchors.keys()
     if 'out' in anchors and 'end' not in anchors:
         el.anchors['end'] = el.anchors['out']
@@ -36,8 +36,8 @@ COMPONENTS_LIB = {
     "M1": lambda: elm.Potentiometer(),
     "M2": lambda: elm.Potentiometer(),
     "M3": lambda: elm.Potentiometer(),
-    "M4": lambda: logic.And(inputs=5),          # 5引脚与门
-    "M5": lambda: logic.SchmittAnd(inputs=5),   # 5引脚施密特与门
+    "M4": lambda: logic.And(inputs=5),          # 5-pin AND gate
+    "M5": lambda: logic.SchmittAnd(inputs=5),   # 5-pin Schmitt AND gate
     "M6": lambda: elm.Crystal(),
     "M7": lambda: elm.Crystal().color('red'),
     "I1": lambda: elm.Dot(open=True).color('red'),

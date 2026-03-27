@@ -1,5 +1,5 @@
 """
-Core模块初始化
+Core module initialization.
 """
 from .schema import (
     ComponentInstance,

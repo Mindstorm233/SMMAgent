@@ -432,7 +432,7 @@ const App = {
     const jsonStr = JSON.stringify(finalJson || {});
     const hash = String(jsonStr.length) + ':' + (jsonStr.slice(0, 200) || '');
 
-    // final 不变则不重复请求
+    // If final is unchanged, don't re-request
     if (this.schemeLastHash === hash && this.schemeBlobUrl) {
       container.innerHTML = this._renderSchemesPanel(this.schemeBlobUrl);
       this._bindSchemesDownload(this.schemeBlobUrl);
@@ -450,7 +450,7 @@ const App = {
     try {
       const blob = await API.drawSchemes(finalJson);
 
-      // 释放旧 URL，避免内存泄漏
+      // Revoke the old URL to avoid memory leaks
       if (this.schemeBlobUrl) URL.revokeObjectURL(this.schemeBlobUrl);
 
       const url = URL.createObjectURL(blob);

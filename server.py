@@ -73,10 +73,10 @@ def persist_compile_artifacts(
     created_at: str,
 ) -> dict:
     """
-    宽松模式：
-    - protocol / draft / final 一定保存
-    - draw_chip 失败不会让整个 compile 失败
-    - 失败信息写入 meta.json 和返回结果
+    Lenient mode:
+    - protocol / draft / final are always saved
+    - a draw_chip failure won't fail the entire compile
+    - failure info is written to meta.json and included in the return result
     """
     folder_name = make_history_dirname(compile_id)
     run_dir = HISTORY_DIR / folder_name
@@ -88,12 +88,12 @@ def persist_compile_artifacts(
     scheme_path = run_dir / "scheme.png"
     meta_path = run_dir / "meta.json"
 
-    # 1) 保存协议文本和 JSON
+    # 1) Save protocol text and JSON
     write_text_file(protocol_path, protocol_text)
     write_json_file(draft_path, draft_data)
     write_json_file(final_path, final_data)
 
-    # 2) 宽松模式绘图
+    # 2) Lenient-mode drawing
     draw_ok = True
     draw_error = None
     try:
@@ -102,7 +102,7 @@ def persist_compile_artifacts(
         draw_ok = False
         draw_error = str(e)
 
-    # 3) 保存 meta 信息
+    # 3) Save meta information
     meta = {
         "compile_id": compile_id,
         "created_at": created_at,
@@ -161,7 +161,7 @@ def safe_read_text(path: Path) -> str:
 
 def find_history_runs() -> List[dict]:
     """
-    扫描 ./history 下所有有效历史目录，按 created_at 倒序返回 meta 列表
+    Scan all valid history directories under ./history and return the meta list sorted by created_at (descending).
     """
     runs = []
     if not HISTORY_DIR.exists():

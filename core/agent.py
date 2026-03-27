@@ -1,6 +1,6 @@
 """
-Agent模块
-实现双阶段编译器：Generator + Verifier
+Agent module.
+Implements a two-stage compiler: Generator + Verifier.
 """
 import json
 import time
@@ -16,7 +16,7 @@ from .rag import (
 
 
 class BioChipCompiler:
-    """生物芯片双阶段编译器"""
+    """Two-stage compiler for biochip design."""
     
     def __init__(
         self,
@@ -30,17 +30,17 @@ class BioChipCompiler:
         temperature: float = 0.0
     ):
         """
-        初始化编译器
+        Initialize the compiler.
         
         Args:
-            api_base: API基础URL
-            api_key: API密钥
-            chat_model: 聊天模型名称
-            embed_model: 嵌入模型名称
-            db_path: 向量数据库路径
-            compiler_prompt_path: 生成器Prompt路径
-            verifier_prompt_path: 校验器Prompt路径
-            temperature: 模型温度参数
+            api_base: API base URL.
+            api_key: API key.
+            chat_model: Chat model name.
+            embed_model: Embedding model name.
+            db_path: Vector database path.
+            compiler_prompt_path: Generator prompt path.
+            verifier_prompt_path: Verifier prompt path.
+            temperature: Model temperature parameter.
         """
         self.api_base = api_base
         self.api_key = api_key
@@ -51,7 +51,7 @@ class BioChipCompiler:
         self.verifier_prompt_path = verifier_prompt_path
         self.temperature = temperature
         
-        # 初始化LLM
+        # Initialize LLM
         self.llm = ChatOpenAI(
             model=self.chat_model,
             temperature=self.temperature,
@@ -59,24 +59,24 @@ class BioChipCompiler:
             openai_api_key=self.api_key
         )
         
-        # 加载Prompt模板
+        # Load prompt templates
         self.compiler_prompt = self._load_prompt(compiler_prompt_path)
         self.verifier_prompt = self._load_prompt(verifier_prompt_path)
     
     def _load_prompt(self, file_path: str) -> ChatPromptTemplate:
-        """加载Prompt模板"""
+        """Load a prompt template."""
         template_str = load_prompt_template_from_file(file_path)
         return ChatPromptTemplate.from_template(template_str)
     
     def retrieve_knowledge(self, protocol_text: str) -> tuple[str, int]:
         """
-        检索相关知识
+        Retrieve relevant knowledge.
         
         Args:
-            protocol_text: 协议文本
+            protocol_text: Protocol text.
             
         Returns:
-            (上下文字符串, 文档数量)
+            (Context string, document count)
         """
         retriever = get_retriever(
             db_path=self.db_path,
@@ -93,14 +93,14 @@ class BioChipCompiler:
         context: str
     ) -> tuple[BioChipDesign, float]:
         """
-        生成初步设计（Generator阶段）
+        Generate an initial design (Generator stage).
         
         Args:
-            protocol_text: 协议文本
-            context: 检索到的上下文
+            protocol_text: Protocol text.
+            context: Retrieved context.
             
         Returns:
-            (草稿设计, 耗时)
+            (Draft design, elapsed time)
         """
         prompt_val = self.compiler_prompt.invoke({
             "context": context,
@@ -121,16 +121,16 @@ class BioChipCompiler:
         context: str
     ) -> tuple[BioChipDesign, float]:
         """
-        校验并修正设计（Verifier阶段）
+        Verify and refine the design (Verifier stage).
         
         Args:
-            draft_design: 草稿设计
-            context: 检索到的上下文
+            draft_design: Draft design.
+            context: Retrieved context.
             
         Returns:
-            (最终设计, 耗时)
+            (Final design, elapsed time)
         """
-        # 将草稿转为JSON字符串
+        # Convert draft to JSON string
         draft_json_str = json.dumps(
             draft_design.model_dump(),
             ensure_ascii=False
@@ -151,32 +151,32 @@ class BioChipCompiler:
     
     def compile(self, protocol_text: str) -> dict:
         """
-        完整编译流程
+        Full compilation workflow.
         
         Args:
-            protocol_text: 协议文本
+            protocol_text: Protocol text.
             
         Returns:
-            包含草稿、最终设计和统计信息的字典
+            Dictionary containing draft, final design, and statistics.
         """
-        print(f"\n🚀 启动双阶段编译器 (Generator + Verifier)")
+        print(f"\n🚀 Starting two-stage compiler (Generator + Verifier)")
         print("=" * 60)
         
-        # 阶段0: RAG检索
-        print("\n🔍 Step 0: RAG 检索 (Sharing Context)...")
+        # Stage 0: RAG retrieval
+        print("\n🔍 Step 0: RAG retrieval (Sharing Context)...")
         context_str, doc_count = self.retrieve_knowledge(protocol_text)
-        print(f"   ✅ 检索到 {doc_count} 条相关规则。")
+        print(f"   ✅ Retrieved {doc_count} relevant rules.")
         
-        # 阶段1: 生成
-        print("\n🏗️  Step 1: 初步设计生成 (Generator)...")
+        # Stage 1: generation
+        print("\n🏗️  Step 1: Initial design generation (Generator)...")
         draft_design, gen_time = self.generate_draft(protocol_text, context_str)
-        print(f"   ✅ 草稿生成完毕 (耗时 {gen_time:.2f}s)")
+        print(f"   ✅ Draft generation completed (elapsed {gen_time:.2f}s)")
         print(f"   (Draft Reasoning: {draft_design.reasoning[:100]}...)")
         
-        # 阶段2: 校验
-        print("\n🕵️  Step 2: 自动校验与修正 (Verifier)...")
+        # Stage 2: verification
+        print("\n🕵️  Step 2: Automatic verification and refinement (Verifier)...")
         final_design, ver_time = self.verify_and_refine(draft_design, context_str)
-        print(f"   ✅ 校验修正完毕 (耗时 {ver_time:.2f}s)")
+        print(f"   ✅ Verification and refinement completed (elapsed {ver_time:.2f}s)")
         
         return {
             "draft": draft_design,
@@ -204,20 +204,20 @@ def create_compiler(
     temperature: float = 0.0
 ) -> BioChipCompiler:
     """
-    工厂函数：创建编译器实例
+    Factory function: create a compiler instance.
     
     Args:
-        api_base: API基础URL
-        api_key: API密钥
-        chat_model: 聊天模型名称
-        embed_model: 嵌入模型名称
-        db_path: 向量数据库路径
-        compiler_prompt_path: 生成器Prompt路径
-        verifier_prompt_path: 校验器Prompt路径
-        temperature: 模型温度参数
+        api_base: API base URL.
+        api_key: API key.
+        chat_model: Chat model name.
+        embed_model: Embedding model name.
+        db_path: Vector database path.
+        compiler_prompt_path: Generator prompt path.
+        verifier_prompt_path: Verifier prompt path.
+        temperature: Model temperature parameter.
         
     Returns:
-        BioChipCompiler实例
+        BioChipCompiler instance.
     """
     return BioChipCompiler(
         api_base=api_base,

@@ -47,7 +47,7 @@ const API = {
                     embed_model: defaults.embedding_model,
                     temperature: defaults.temperature
                 },
-                paths: {},     // 先用后端默认
+                paths: {},     // Use backend defaults
                 options: { return_draft: true, trace: true }
             })
         });

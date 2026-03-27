@@ -150,13 +150,13 @@
 <body>
     <header>
         <h1>🧪 MicroChip API Tester</h1>
-        <div class="hint">点击按钮测试所有 API（样例数据已硬编码）。Base URL 默认为同源。</div>
+        <div class="hint">Click buttons to test all APIs (sample data is hard-coded). Base URL defaults to same-origin.</div>
     </header>
 
     <main>
         <!-- Left controls -->
         <section class="card">
-            <h2>1) 基本信息</h2>
+            <h2>1) Basic Information</h2>
 
             <div class="row">
                 <button class="primary" id="btnHealth">GET /api/v1/health</button>
@@ -165,18 +165,18 @@
 
             <div class="sep"></div>
 
-            <h2>2) 编译任务（Compile + Job）</h2>
+            <h2>2) Compilation Task (Compile + Job)</h2>
 
-            <label>Protocol Text（硬编码样例，可自行修改）</label>
+            <label>Protocol Text (Hard-coded sample, modify as needed)</label>
             <textarea id="protocolText"></textarea>
 
             <div class="grid2">
                 <div>
-                    <label>Job ID（用于查询/取消）</label>
+                    <label>Job ID (for querying/canceling)</label>
                     <input type="text" id="jobId" placeholder="job_xxx" />
                 </div>
                 <div>
-                    <label>Compile ID（用于取结果/历史详情）</label>
+                    <label>Compile ID (for fetching result/history details)</label>
                     <input type="text" id="compileId" placeholder="compile_xxx" />
                 </div>
             </div>
@@ -198,22 +198,22 @@
 
             <div class="sep"></div>
 
-            <h2>4) 一键流程（推荐）</h2>
+            <h2>4) One-click Flow (Recommended)</h2>
             <div class="row">
                 <button class="primary" id="btnRunAll">▶ Run: create → poll → result → history</button>
                 <button id="btnClearLog">🧹 Clear Output</button>
             </div>
 
             <p class="muted" style="margin-top: 10px;">
-                小提示：<br>
-                - “一键流程”会创建 compile，轮询 job 直到结束，然后自动拉取 result，并刷新 history。<br>
-                - 如果你还没建库，请先在命令行运行 build-kb，否则 compile 可能报找不到 chroma_db。🙂
+                Tip:<br>
+                - "One-click flow" creates a compile, polls the job until it finishes, then fetches the result and refreshes history.<br>
+                - If you haven't built the knowledge base yet, run `build-kb` in the command line first; otherwise compile may fail because `chroma_db` is missing.
             </p>
         </section>
 
         <!-- Right output -->
         <section class="card">
-            <h2>输出（Response / Error）</h2>
+            <h2>Output (Response / Error)</h2>
             <div class="row" style="margin-bottom: 10px;">
                 <div class="kv">Status: <span id="statusText">Idle</span></div>
                 <div class="kv">Last Job: <span id="lastJob">-</span></div>
@@ -227,11 +227,11 @@
         // -----------------------------
         // Hardcoded sample data
         // -----------------------------
-        const SAMPLE_PROTOCOL = `操作步骤：
-1. 取400μL样本加入到1.5mL无核酸酶离心管中；
-2. 依次加入10μL去宿主试剂SA，50μL去宿主缓冲液，10μL去宿主试剂M；
-3. 放置到恒温震荡金属浴上37℃、1000rpm反应5min；
-4. 结束后进行后续分离/收集（可按你的实际流程补充）。`;
+        const SAMPLE_PROTOCOL = `Procedure:
+1. Take 400μL of the sample and add it to a 1.5mL nuclease-free microcentrifuge tube;
+2. Add 10μL of host-depletion reagent SA, then 50μL host-depletion buffer, then 10μL of host-depletion reagent M;
+3. Incubate in a temperature-controlled shaking metal bath at 37℃ and 1000rpm for 5min;
+4. Proceed with downstream separation/collection (customize according to your workflow).`;
 
         // If you want to override compile request fields, change here (still hardcoded).
         // Note: models/paths/options are optional; backend defaults should use .env.

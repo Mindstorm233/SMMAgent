@@ -1,6 +1,6 @@
 """
-RAG检索模块
-负责向量数据库的检索和上下文格式化
+RAG retrieval module.
+Responsible for vector database retrieval and context formatting.
 """
 import os
 from langchain_openai import OpenAIEmbeddings
@@ -15,17 +15,17 @@ def get_retriever(
     k: int = 4
 ):
     """
-    创建向量数据库检索器
+    Create a vector database retriever.
     
     Args:
-        db_path: 向量数据库路径
-        api_base: API基础URL
-        api_key: API密钥
-        embed_model: 嵌入模型名称
-        k: 检索返回的文档数量
+        db_path: Vector database path.
+        api_base: API base URL.
+        api_key: API key.
+        embed_model: Embedding model name.
+        k: Number of documents to return.
         
     Returns:
-        检索器对象
+        Retriever object.
     """
     embeddings = OpenAIEmbeddings(
         model=embed_model,
@@ -36,7 +36,7 @@ def get_retriever(
     )
     
     if not os.path.exists(db_path):
-        raise FileNotFoundError(f"找不到数据库 {db_path}")
+        raise FileNotFoundError(f"Database not found: {db_path}")
     
     vectorstore = Chroma(
         persist_directory=db_path,
@@ -48,14 +48,14 @@ def get_retriever(
 
 def retrieve_context(retriever, query: str) -> tuple[str, int]:
     """
-    检索相关上下文并格式化
+    Retrieve relevant context and format it.
     
     Args:
-        retriever: 检索器对象
-        query: 查询文本
+        retriever: Retriever object.
+        query: Query text.
         
     Returns:
-        (格式化的上下文字符串, 检索到的文档数量)
+        (Formatted context string, number of retrieved documents)
     """
     docs = retriever.invoke(query)
     
@@ -72,28 +72,28 @@ def retrieve_context(retriever, query: str) -> tuple[str, int]:
 
 def load_prompt_template_from_file(file_path: str) -> str:
     """
-    从文件加载并转义Prompt模板
+    Load and escape a prompt template from file.
     
     Args:
-        file_path: Prompt文件路径
+        file_path: Prompt file path.
         
     Returns:
-        转义后的模板字符串
+        Escaped template string.
     """
     if not os.path.exists(file_path):
-        raise FileNotFoundError(f"文件不存在: {file_path}")
+        raise FileNotFoundError(f"File does not exist: {file_path}")
     
     with open(file_path, "r", encoding="utf-8") as f:
         raw_text = f.read()
     
-    # 通用转义逻辑
+    # Generic escaping logic
     escaped_text = raw_text.replace("{", "{{").replace("}", "}}")
     
-    # 还原标准变量
+    # Restore standard variables
     escaped_text = escaped_text.replace("{{context}}", "{context}")
     escaped_text = escaped_text.replace("{{question}}", "{question}")
     
-    # 兼容旧变量名
+    # Compatibility with legacy variable names
     escaped_text = escaped_text.replace("{{ELEMENT_LIBRARY_JSON}}", "{context}")
     escaped_text = escaped_text.replace("{{PROTOCOL_TEXT}}", "{question}")
     
